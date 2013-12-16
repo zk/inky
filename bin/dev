@@ -1,9 +1,0 @@
-#!/bin/sh
-
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-cd $SCRIPT_DIR/.. && \
-   AWS_ACCESS_ID=fillin \
-   AWS_SECRET_ACCESS_KEY=fillin \
-   AWS_BUCKET=fillin \
-lein repl :headless
