@@ -30,23 +30,20 @@
   :plugins [[lein-cljsbuild "1.0.0"]] ;; required for heroku deploy
   :cljsbuild {:builds
               {:dev  {:source-paths ["src/cljs"]
-                      :compiler {:output-to "resources/public/cljs/clojuredocs.js"
+                      :compiler {:output-to "resources/public/cljs/inky.js"
                                  :output-dir "resources/public/cljs"
                                  :optimizations :none
-                                 :source-map true
-                                 :foreign-libs [{:file "js/syntaxhighlighter.js"
-                                                 :provides ["highlight"]}]
-                                 :externs ["externs/syntaxhighlighter.js"]}}
+                                 :source-map true}}
 
                ;; for debugging advanced compilation problems
                :dev-advanced  {:source-paths ["src/cljs"]
-                               :compiler {:output-to "resources/public/cljs/clojuredocs.js"
+                               :compiler {:output-to "resources/public/cljs/inky.js"
                                           :output-dir "resources/public/cljs-advanced"
-                                          :source-map "resources/public/cljs/clojuredocs.js.map"
+                                          :source-map "resources/public/cljs/inky.js.map"
                                           :optimizations :advanced}}
 
                :prod {:source-paths ["src/cljs"]
-                      :compiler {:output-to "resources/public/cljs/clojuredocs.js"
+                      :compiler {:output-to "resources/public/cljs/inky.js"
                                  :optimizations :advanced
                                  :pretty-print false}
                       :jar true}}})
