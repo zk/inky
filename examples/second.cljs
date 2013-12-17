@@ -39,8 +39,7 @@
              :color "black"
              :background-color "black"
              :font-family "'Helvetica Neue', sans-serif"
-             :font-size "12px"
-             :transition "background-color 0.2s ease"}]))
+             :font-size "12px"}]))
 
 (def num-cells 10000)
 
@@ -90,3 +89,5 @@
             (<! (timeout (+ 1000 (rand-int 10000))))
             (>! render [(rand-int 10000) (rand-int 10)])))
       (recur (inc i)))))
+
+;;fooooooooooooooooooooooooooo

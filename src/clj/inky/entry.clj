@@ -18,7 +18,8 @@
             [clojure.string :as str]
             [clj-http.client :as hcl]
             [inky.compile :as comp]
-            [inky.s3 :as s3]))
+            [inky.s3 :as s3]
+            [clojure.java.shell :as sh]))
 
 (defn md5
   "Compute the hex MD5 sum of a string."
@@ -33,18 +34,20 @@
           (throw (new RuntimeException e)))))))
 
 (defn compile-transform [[prop val]]
-  (str
-    (name prop)
-    ":"
-    (cond
-      (string? val) val
-      (coll? val) (->> val
-                       (map name)
-                       (interpose ",")
-                       (apply str))
-      (keyword val) (name val)
-      :else val)
-    ";"))
+  (if (map? val)
+    (compile-rule [prop val])
+    (str
+      (name prop)
+      ":"
+      (cond
+        (string? val) val
+        (coll? val) (->> val
+                         (map name)
+                         (interpose ",")
+                         (apply str))
+        (keyword val) (name val)
+        :else val)
+      ";")))
 
 (defn compile-rule [[sel transform]]
   (str (name sel)
@@ -75,8 +78,11 @@
     [:head
      [:title (str ns " | inky.cc")]
      (style-el
-       :body {:font-family "'Helvetica Neue', Arial, sans-serif;"
+       :body {:font-family "'Helvetica Neue', Arial, sans-serif"
               :margin-top "30px"}
+       :a {:color "#428bca"
+           :text-decoration "none"}
+       :a:hover {:color "#2a6496"}
        "h1,h2,h3,h4,h5" {:font-weight "normal"}
        :h1 {:font-size "50px"
             :margin-bottom "20px"
@@ -140,18 +146,69 @@
 
 (defn in-s3? [hash]
   (try
-    (= 200 (-> (str "https://s3.amazonaws.com/f.inky.cc/" hash "/code.cljs")
+    (= 200 (-> (str "http://f.inky.cc/" hash "/code.cljs")
                hcl/head
                :status))
     (catch Exception e false)))
+
+(defn render-compiled [hash]
+  (hp/html5
+    [:head]
+    [:body
+     [:div.canvas]
+     [:script {:type "text/javascript"
+               :src (str "http://f.inky.cc/" hash "/code.js")}]]))
+
+(defn render-compiling []
+  (hp/html5
+    [:head
+     [:meta {:http-equiv "refresh" :content "6"}]
+     (style-el
+       :body {:font-family "'Helvetica Neue', Arial, sans-serif"
+              :margin "40px"
+              :line-height "1.5em"
+              :color "black"}
+       :.animate {:-webkit-animation-name "bgcolor"
+                  :-webkit-animation-duration "6s"
+                  :-webkit-animation-iteration-count "infinite"}
+       :p {:font-size "20px"
+           :font-weight "300"
+           :margin-bottom "30px"}
+       :h1 {:font-weight "normal"
+            :margin-bottom "30px"}
+       :.box {:height "230px"}
+       "@-webkit-keyframes bgcolor"
+       {"0%" {:background-color "#3498db"}
+        "20%" {:background-color "#2ecc71"}
+        "40%" {:background-color "#f1c40f"}
+        "60%" {:background-color "#8e44ad"}
+        "80%" {:background-color "#e67e22"}
+        "100%" {:background-color "#3498db"}})]
+    [:body
+     [:h1 "Compiling!"]
+     [:p "This should only take a few seconds, so sit tight and we'll load the results, automatically, when they're ready."]
+     [:p "Results are cached for subsequent loads."]
+     [:div.box.animate]]))
+
+(def in-progress (atom #{}))
+
+(defn add-in-progress [hash]
+  (swap! in-progress conj hash))
+
+(defn compiling? [hash]
+  (get @in-progress hash))
 
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (let [url (-> r :params :url)
                       cljs-source (try (slurp url)
-                                       (catch Exception e "Whoops!!!!!!!!!"))]
+                                       (catch Exception e "Whoops!!!!!!!!!"))
+                      hash (md5 cljs-source)
+                      compiled? (in-s3? hash)]
                   (tpl (merge (parse-meta cljs-source)
-                              {:canvas-url (str "/canvas?url=" (url-encode url))
+                              {:canvas-url (if compiled?
+                                             (str "http://f.inky.cc/" hash "/code.html")
+                                             (str "/canvas?url=" (url-encode url)))
                                :source cljs-source})))))
   (GET "/canvas" [] (fn [r]
                       (let [url (-> r :params :url)
@@ -159,18 +216,32 @@
                             hash (md5 source)
                             dir (str "/tmp/inky/" hash)
                             filename (str dir "/code.cljs")
-                            compiled? (in-s3? hash)]
-                        (when-not compiled?
-                          (.mkdirs (java.io.File. dir))
-                          (spit filename source)
-                          (compile hash filename)
-                          (s3/upload-hash hash (str "/tmp/inky/" hash)))
-                        (hp/html5
-                          [:head]
-                          [:body
-                           [:div.canvas]
-                           [:script {:type "text/javascript"
-                                     :src (str "http://f.inky.cc/" hash "/code.js")}]])))))
+                            html-filename (str dir "/code.html")
+                            compiled? (in-s3? hash)
+                            compiling? (compiling? hash)]
+                        (cond
+                          (and compiling? (not compiled?)) (render-compiling)
+                          (not compiled?) (do
+                                            (future
+                                              (try
+                                                (println "Compiling" hash url dir)
+                                                (add-in-progress hash)
+                                                (when (.exists (java.io.File. dir))
+                                                  (sh/sh "rm" "-rf" dir))
+                                                (.mkdirs (java.io.File. dir))
+                                                (spit filename source)
+                                                (spit html-filename (render-compiled hash))
+                                                (compile hash filename)
+                                                (s3/upload-hash hash (str "/tmp/inky/" hash))
+                                                (println "done compiling" hash)
+                                                (catch Exception e
+                                                  (println e)
+                                                  (.printStackTrace e))))
+                                            (render-compiling))
+                          :else (render-compiled hash)))))
+  (GET "/check-compiled" [] (fn [r]
+                              (let [url (-> r :params :url)]
+                                ))))
 
 (def routes
   (-> _routes
