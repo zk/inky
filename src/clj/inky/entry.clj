@@ -128,7 +128,7 @@
          "SyntaxHighlighter.defaults.gutter=true;"
          "SyntaxHighlighter.all();")]]]))
 
-(def compile comp/compile-cljs)
+(def compile-cljs comp/compile-cljs)
 
 (defn parse-meta [source]
   (let [forms (read-string (str "[" source "]"))
@@ -233,7 +233,7 @@
                                                 (.mkdirs (java.io.File. dir))
                                                 (spit filename source)
                                                 (spit html-filename (render-compiled hash))
-                                                (compile hash filename)
+                                                (compile-cljs hash filename)
                                                 (s3/upload-hash hash (str "/tmp/inky/" hash))
                                                 (println "done compiling" hash)
                                                 (catch Exception e
