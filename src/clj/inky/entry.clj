@@ -33,6 +33,8 @@
         (catch java.security.NoSuchAlgorithmException e
           (throw (new RuntimeException e)))))))
 
+(declare compile-rule)
+
 (defn compile-transform [[prop val]]
   (if (map? val)
     (compile-rule [prop val])
