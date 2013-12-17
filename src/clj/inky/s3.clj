@@ -9,7 +9,10 @@
 (def secret-key (env/str :aws-secret-access-key))
 (def bucket (env/str :aws-bucket))
 
-(def client (AmazonS3Client. (BasicAWSCredentials. access-id secret-key)))
+(defn client []
+  (AmazonS3Client. (BasicAWSCredentials. access-id secret-key)))
+
+(def client (memoize client))
 
 (defn upload-hash [hash base-path]
   (doseq [file (->> base-path
@@ -18,4 +21,4 @@
                     (remove #(.isDirectory %)))]
     (let [name (.getAbsolutePath file)
           key (str hash (.replace name base-path ""))]
-      (.putObject client (PutObjectRequest. bucket key file)))))
+      (.putObject (client) (PutObjectRequest. bucket key file)))))
