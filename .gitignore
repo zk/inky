@@ -8,3 +8,7 @@ pom.xml.asc
 /.lein-*
 /.nrepl-port
 /bin/dev
+/resources/public/cljs-compiled
+/resources/public/css
+/src/scss/.sass-cache
+/.sass-cache

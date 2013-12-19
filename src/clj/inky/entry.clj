@@ -6,7 +6,8 @@
          params
          nested-params
          multipart-params
-         keyword-params]
+         keyword-params
+         reload]
         [ring.middleware.session.cookie :only (cookie-store)]
         [ring.util.response :only (response content-type)])
   (:require [ring.adapter.jetty :as jetty]
@@ -161,6 +162,18 @@
      [:script {:type "text/javascript"
                :src (str "http://f.inky.cc/" hash "/code.js")}]]))
 
+(defn render-dev [hash entry-path]
+  (hp/html5
+    [:head]
+    [:body
+     [:div.canvas]
+     [:script {:type "text/javascript"
+               :src (str "/cljs-compiled/goog/base.js")}]
+     [:script {:type "text/javascript"
+               :src (str "/cljs-compiled/out.js")}]
+     [:script {:type "text/javascript"
+               :src (str "/cljs-compiled/" entry-path ".js")}]]))
+
 (defn render-compiling []
   (hp/html5
     [:head
@@ -200,18 +213,48 @@
 (defn compiling? [hash]
   (get @in-progress hash))
 
+(defn html-response [body]
+  {:headers {"Content-Type" "text/html;utf-8"}
+   :body body})
+
+(defn $layout [{:keys [content]}]
+  (hp/html5
+    [:head
+     [:link {:rel :stylesheet :href "/css/app.css"}]]
+    [:body
+     [:header.navbar
+      [:div.container
+       [:div.row
+        [:div.col-md-12
+         [:a.navbar-brand {:href "/"}
+          "inky.cc"]
+         [:span.navbar-text ":: Sketch in ClojureScript"]]]]]
+     [:div.container
+      [:div.row
+       [:div.col-md-12
+        content]]]]))
+
+(defn $intro []
+  ($layout
+    {:content [:div
+               [:h1 "Inky is an easy way to sketch and share your ideas in " [:a {:href "/"} "ClojureScript"] "."]]}))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
-                (let [url (-> r :params :url)
-                      cljs-source (try (slurp url)
-                                       (catch Exception e "Whoops!!!!!!!!!"))
-                      hash (md5 cljs-source)
-                      compiled? (in-s3? hash)]
-                  (tpl (merge (parse-meta cljs-source)
-                              {:canvas-url (if compiled?
-                                             (str "http://f.inky.cc/" hash "/code.html")
-                                             (str "/canvas?url=" (url-encode url)))
-                               :source cljs-source})))))
+                (html-response
+                  ($intro))))
+  (GET "/:sketch-id" [sketch-id]
+    (fn [r]
+      (let [url (-> r :params :url)
+            cljs-source (try (slurp url)
+                             (catch Exception e "Whoops!!!!!!!!!"))
+            hash (md5 cljs-source)
+            compiled? (in-s3? hash)]
+        (tpl (merge (parse-meta cljs-source)
+                    {:canvas-url (if compiled?
+                                   (str "http://f.inky.cc/" hash "/code.html")
+                                   (str "/canvas?url=" (url-encode url)))
+                     :source cljs-source})))))
   (GET "/canvas" [] (fn [r]
                       (let [url (-> r :params :url)
                             source (slurp url)
@@ -231,7 +274,7 @@
                                                 (when (.exists (java.io.File. dir))
                                                   (sh/sh "rm" "-rf" dir))
                                                 (.mkdirs (java.io.File. dir))
-                                                (spit filename source)
+                                                (spit filename dir)
                                                 (spit html-filename (render-compiled hash))
                                                 (compile-cljs hash filename)
                                                 (s3/upload-hash hash (str "/tmp/inky/" hash))
@@ -243,7 +286,29 @@
                           :else (render-compiled hash)))))
   (GET "/check-compiled" [] (fn [r]
                               (let [url (-> r :params :url)]
-                                ))))
+                                )))
+  (GET "/dev" [] (fn [r]
+                   (let [url (-> r :params :url)
+                         source (slurp url)
+                         hash (md5 source)
+                         dir (str "/tmp/inky/" hash)
+                         source-dir (str "/tmp/inky-source/" hash)
+                         filename (str source-dir "/first.cljs")
+                         start (System/currentTimeMillis)]
+                     (try
+                       (.mkdirs (java.io.File. source-dir))
+                       (comp/compile-cljs-none hash "examples")
+                       (println "done compiling" hash (- (System/currentTimeMillis) start))
+                       (catch Exception e
+                         (println e)
+                         (.printStackTrace e)))
+                     (render-dev
+                       hash
+                       (-> source
+                           parse-meta
+                           :ns
+                           str
+                           (str/replace #"\." "/")))))))
 
 (def routes
   (-> _routes
