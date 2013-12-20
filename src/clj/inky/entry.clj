@@ -79,59 +79,6 @@
                                (str "<a href=\"" href "\">" href "</a>")))
         (str/replace #"\n\n" "<br /><br />"))))
 
-(defn tpl [{:keys [ns doc canvas-url source]}]
-  (hp/html5
-    [:head
-     [:title (str ns " | inky.cc")]
-     (style-el
-       :body {:font-family "'Helvetica Neue', Arial, sans-serif"
-              :margin-top "30px"}
-       :a {:color "#428bca"
-           :text-decoration "none"}
-       :a:hover {:color "#2a6496"}
-       "h1,h2,h3,h4,h5" {:font-weight "normal"}
-       :h1 {:font-size "50px"
-            :margin-bottom "20px"
-            :letter-spacing "1px"}
-       :p {:line-height "1.5em"
-           :font-size "22px"
-           :font-weight "300"
-           :font-family "Garamond"}
-       :iframe {:width "100%"
-                :height "500px"
-                :border "solid #eee 1px"
-                :overflow "auto"}
-       :.wrapper {:width "760px"
-                  :margin "0 auto"}
-       :section {:margin-bottom "30px"}
-       :pre {:font-size "15px"
-             :border :none}
-       :.syntaxhighlighter {:font-size "15px"
-                            :font-family "monospace"
-                            :white-space "nowrap"
-                            :overflow "auto"}
-       :.controls {:text-align "right"}
-       :pre {:background-color :transparent})
-     [:style {:type "text/css"}
-      (slurp "syntaxhighlighterclj.css")]]
-    [:body
-     [:div.wrapper
-      [:section
-       [:h1 ns]
-       [:p (format-doc doc)]]
-      [:section
-       [:iframe {:src canvas-url}]
-       [:div.controls
-        [:a {:href canvas-url} "full-screen"]]]
-      [:section
-       [:pre {:class "brush: clojure"} source]]
-      [:script {:type "text/javascript"}
-       (str
-         (slurp "syntaxhighlighterclj.js") ";"
-         "SyntaxHighlighter.defaults.toolbar=false;"
-         "SyntaxHighlighter.defaults.gutter=true;"
-         "SyntaxHighlighter.all();")]]]))
-
 (def compile-cljs comp/compile-cljs)
 
 (defn parse-meta [source]
@@ -194,17 +141,16 @@
           [:header.navbar
            [:div
             [:a.navbar-brand {:href "/"}
-             "inky.cc"]
-            [:span.navbar-text ":: Sketch in ClojureScript"]]]
+             [:i.icon-rocket] "inky.cc"]
+            [:span.navbar-text "/ sketch in cljs"]]]
           [:div.col-sm-12
            content]]]]]]
      [:footer
       [:div.container
        [:div.row
         [:div.col-sm-8.col-sm-offset-2
-         "inky.cc brought to you by "
-         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
-         "."]]]]]))
+         "inky.cc is brought to you by "
+         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]]))
 
 (defn render-compiling []
   ($layout
@@ -242,23 +188,36 @@
   {:headers {"Content-Type" "text/html;utf-8"}
    :body body})
 
+(def cljs-libs
+  [["Dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
+   ["Javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
+   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]])
+
 (defn $intro []
   ($layout
-    {:content [:div
-               [:ol
-                [:li
-                 "Visit "
-                 [:code "http://inky.cc/compile?url=*url-of-cljs-file*"]
-                 ". For example: to compile this "
-                 [:a {:href "https://gist.github.com/zk/7981902/raw/c5a537e95dcb19cbaf327d069ae04b2524ae80aa/inkyfirst.cljs"} "gist file"]
-                 ", visit "
-                 [:a {:href "http://inky.cc/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
+    {:head [[:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]]
+     :body-class :intro-page
+     :content [:div
+               [:section.about
+                [:h3 "What?"]
+                [:p "Inky.cc is a place to compile and host short snippets of ClojureScript. We'll bring the environment, you bring the code."]
+                [:p
+                 "We've included several cljs libraries for you to use, including "
+                 (->> cljs-libs
+                      (map (fn [[name version href]]
+                             [:span [:a {:href href} name] " (" version ")"]))
+                      (interpose ", ")
+                      reverse
+                      ((fn [[x & rest]]
+                         (concat [x] [" and "] rest)))
+                      reverse)
                  "."]
-                [:li "???"]
-                [:li "Profit"]]
+                [:p
+                 "Drop me a line at " [:a {:href "https://twitter.com/heyzk"} "@heyzk"] " if you'd like your library to be available to inky sketches."]]
                [:section.sketch-examples
                 [:h3 "Recent Sketches"]
                 [:ul
+
                  [:li.sketch-preview
                   [:div.sketch-meta
                    [:strong "first"]
@@ -273,7 +232,30 @@
                    [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
                   [:a {:href "/s/7e2ed9da90a50773bea5b87b73844669"}
                    [:img {:src "http://s3.amazonaws.com/f.inky.cc/top-examples/7e2ed9da90a50773bea5b87b73844669.png"}]]]
-                 ]]]}))
+                 [:li.sketch-preview
+                  [:div.sketch-meta
+                   [:strong "instagram.api"]
+                   " by "
+                   [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+                  [:a {:href "/s/16decbc7133d1b492e3fb0063fb02dd0"}
+                   [:img {:src "http://f.cl.ly/items/351c3s3w402y3Q2f3u1U/Screen%20Shot%202013-12-19%20at%2011.30.23%20PM.png"}]]]
+                 ]]
+               [:section.instructions
+                [:h3 "How-To"]
+                [:div.instructions-list
+                 [:ol
+                  [:li
+                   "Visit "
+                   [:code "http://inky.cc/compile?url=url-of-cljs-file"]
+                   ". This will compile the provided ClojureScript text and redirect you to the resulting sketch. "
+                   [:br]
+                   "For example: to compile "
+                   [:a {:href "https://gist.github.com/zk/7981902/raw/c5a537e95dcb19cbaf327d069ae04b2524ae80aa/inkyfirst.cljs"} "this gist file"]
+                   ", visit "
+                   [:a {:href "/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
+                   "."]
+                  [:li "???"]
+                  [:li "Profit"]]]]]}))
 
 (defn gist-source [gist-id]
   (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
@@ -288,6 +270,26 @@
 
 (defn source-by-id [id]
   (gist-source id))
+
+(defn squeeze
+  "Ellipses the middle of a long string."
+  [n s]
+  (let [n (max (- n 3) 0)]
+    (cond
+      (< (count s) n) s
+      :else (let [len (count s)
+                  half-len (int (/ len 2))
+                  to-take-out (- len n)
+                  half-take-out (int (/ to-take-out 2))
+                  first-half (take half-len s)
+                  second-half (drop half-len s)]
+              (str (->> first-half
+                        (take (- half-len half-take-out))
+                        (apply str))
+                   "..."
+                   (->> second-half
+                        (drop half-take-out)
+                        (apply str)))))))
 
 (defroutes _routes
   (GET "/" [] (fn [r]
@@ -365,7 +367,7 @@
 
   (GET "/s/:sketch-id" [sketch-id]
     (fn [r]
-      (let [canvas-url (str "http://f.inky.cc/" sketch-id "/code.html")
+      (let [canvas-url (str "/s/" sketch-id "/canvas")
             {:keys [ns doc source url created]}
             (->> (slurp (str "http://f.inky.cc/" sketch-id "/meta.edn"))
                  edn/read-string)]
@@ -383,12 +385,12 @@
                [:a {:href canvas-url} "full-screen"]]]
              [:section
               [:pre {:class "brush: clojure"} source]]
-             [:section.meta
+             [:section.sketch-meta
               "Created at "
               (or created "donno")
-              ", from "
+              " from "
               (if url
-                [:a {:href url} url]
+                [:a {:href url} (squeeze 60 url)]
                 " we have no idea")
               "."]
              [:script {:type "text/javascript"}
@@ -397,6 +399,10 @@
                 "SyntaxHighlighter.defaults.toolbar=false;"
                 "SyntaxHighlighter.defaults.gutter=true;"
                 "SyntaxHighlighter.all();")]]]}))))
+  (GET "/s/:sketch-id/canvas" [sketch-id]
+    (fn [r]
+      (render-compiled sketch-id)))
+
   (GET "/show-compiling" [] (render-compiling)))
 
 (def routes

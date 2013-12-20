@@ -11,7 +11,6 @@
                  [compojure "1.1.6"]
                  [aleph "0.3.0-rc2"]
                  [hiccup "1.0.4"]
-                 [prismatic/dommy "0.1.2"]
                  [org.clojure/clojurescript "0.0-2120"]
                  [clucy "0.4.0"]
                  [watchtower "0.1.1"]
@@ -23,7 +22,9 @@
                  [congomongo "0.4.1"]
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [unk "0.9.1"]
-                 [com.amazonaws/aws-java-sdk "1.6.8"]]
+                 [com.amazonaws/aws-java-sdk "1.6.8"]
+                 [tailrecursion/javelin "2.4.0"]
+                 [prismatic/dommy "0.1.2"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
                            (inky.entry/-main))}

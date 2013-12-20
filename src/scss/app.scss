@@ -33,7 +33,7 @@ body {
 }
 
 footer {
-  font-size: 12px;
+  font-size: 14px;
   color: #aaa;
   height: 60px;
   text-align: center;
@@ -56,11 +56,11 @@ h1 {
 
 h3 {
   font-size: 18px;
-  font-weight: normal;
+  font-weight: 500;
   line-height: 1.5em;
-  text-transform: uppercase;
   margin-top: 0;
   margin-bottom: 0.5em;
+  color: #444;
   //font-family: 'Open Sans', sans-serif;
 }
 
@@ -70,7 +70,7 @@ h4 {
 
 p {
   line-height: 1.8em;
-  font-size:16px;
+  font-size:18px;
   font-weight: normal;
   margin-bottom: 1.4em;
 }
@@ -89,12 +89,13 @@ ul {
 }
 
 section {
-  margin-bottom: 2em;
+  margin-bottom: 40px;
 }
 
 .navbar {
   color: #888;
   .navbar-brand {
+    font-size: 18px;
     padding-right: 4px;
     i {
       font-size: 0.82em;
@@ -103,7 +104,11 @@ section {
   }
 
   .navbar-text {
+    float: none;
+    display: inline-block;
     margin-left: 0px;
+    line-height: 20px;
+    font-size: 18px;
   }
 }
 
@@ -140,23 +145,49 @@ ol li {
     overflow: auto;
   }
 
+  .syntaxhighlighter .gutter {
+    color: #ccc;
+    padding-right: 5px;
+  }
+
   .controls {
     text-align: right;
   }
+
+  .sketch-meta {
+    font-size: 12px;
+  }
 }
 
+.intro-page {
+  .instructions {
+  }
 
-// main page
+  .sketch-preview {
+    margin-bottom: 30px;
 
-.sketch-preview {
-  margin-bottom: 30px;
-}
+    img {
+      border: solid #eee 1px;
+    }
+  }
 
-.sketch-meta {
-  margin-bottom: 10px;
-}
+  .sketch-meta {
+    font-size: 18px;
+    margin-bottom: 10px;
 
-.sketch-examples {
-  padding: 30px;
-  background-color: #f8f8f8;
+    strong {
+      font-weight: 500;
+    }
+  }
+
+  .instructions-list {
+    padding: 20px;
+    background-color: #f8f8f8;
+  }
+
+  ol {
+    font-size: 18px;
+    font-family: 'PT Serif', serif;
+    line-height: 1.6em;
+  }
 }
