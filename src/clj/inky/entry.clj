@@ -197,65 +197,65 @@
   ($layout
     {:head [[:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]]
      :body-class :intro-page
-     :content [:div
-               [:section.about
-                [:h3 "What?"]
-                [:p "Inky.cc is a place to compile and host short snippets of ClojureScript. We'll bring the environment, you bring the code."]
-                [:p
-                 "We've included several cljs libraries for you to use, including "
-                 (->> cljs-libs
-                      (map (fn [[name version href]]
-                             [:span [:a {:href href} name] " (" version ")"]))
-                      (interpose ", ")
-                      reverse
-                      ((fn [[x & rest]]
-                         (concat [x] [" and "] rest)))
-                      reverse)
-                 "."]
-                [:p
-                 "Drop me a line at " [:a {:href "https://twitter.com/heyzk"} "@heyzk"] " if you'd like your library to be available to inky sketches."]]
-               [:section.sketch-examples
-                [:h3 "Recent Sketches"]
-                [:ul
-
-                 [:li.sketch-preview
-                  [:div.sketch-meta
-                   [:strong "first"]
-                   " by "
-                   [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-                  [:a {:href "/s/dc820ddc03b6e8e1c9ff60572ff873c5"}
-                   [:img {:src "http://f.cl.ly/items/06430H393A2M2T1H1N3e/Screen%20Shot%202013-12-19%20at%204.01.24%20PM.png"}]]]
-                 [:li.sketch-preview
-                  [:div.sketch-meta
-                   [:strong "ten.k.processes.redux"]
-                   " by "
-                   [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-                  [:a {:href "/s/7e2ed9da90a50773bea5b87b73844669"}
-                   [:img {:src "http://s3.amazonaws.com/f.inky.cc/top-examples/7e2ed9da90a50773bea5b87b73844669.png"}]]]
-                 [:li.sketch-preview
-                  [:div.sketch-meta
-                   [:strong "instagram.api"]
-                   " by "
-                   [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-                  [:a {:href "/s/16decbc7133d1b492e3fb0063fb02dd0"}
-                   [:img {:src "http://f.cl.ly/items/351c3s3w402y3Q2f3u1U/Screen%20Shot%202013-12-19%20at%2011.30.23%20PM.png"}]]]
-                 ]]
-               [:section.instructions
-                [:h3 "How-To"]
-                [:div.instructions-list
-                 [:ol
-                  [:li
-                   "Visit "
-                   [:code "http://inky.cc/compile?url=url-of-cljs-file"]
-                   ". This will compile the provided ClojureScript text and redirect you to the resulting sketch. "
-                   [:br]
-                   "For example: to compile "
-                   [:a {:href "https://gist.github.com/zk/7981902/raw/c5a537e95dcb19cbaf327d069ae04b2524ae80aa/inkyfirst.cljs"} "this gist file"]
-                   ", visit "
-                   [:a {:href "/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
-                   "."]
-                  [:li "???"]
-                  [:li "Profit"]]]]]}))
+     :content
+     [:div
+      [:section.about
+       [:h3 "What?"]
+       [:p "Inky.cc is a place to compile and host short snippets of ClojureScript. We'll bring the environment, you bring the code."]
+       [:p
+        "We've included several cljs libraries for you to use, including "
+        (->> cljs-libs
+             (map (fn [[name version href]]
+                    [:span [:a {:href href} name] " (" version ")"]))
+             (interpose ", ")
+             reverse
+             ((fn [[x & rest]]
+                (concat [x] [" and "] rest)))
+             reverse)
+        "."]
+       [:p
+        "Drop me a line at " [:a {:href "https://twitter.com/heyzk"} "@heyzk"] " if you'd like your library to be available to inky sketches."]]
+      [:section.sketch-examples
+       [:h3 "Recent Sketches"]
+       [:ul
+        [:li.sketch-preview
+         [:div.sketch-meta
+          [:strong "first"]
+          " by "
+          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+         [:a {:href "/s/dc820ddc03b6e8e1c9ff60572ff873c5"}
+          [:img {:src "http://f.cl.ly/items/06430H393A2M2T1H1N3e/Screen%20Shot%202013-12-19%20at%204.01.24%20PM.png"}]]]
+        [:li.sketch-preview
+         [:div.sketch-meta
+          [:strong "ten.k.processes.redux"]
+          " by "
+          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+         [:a {:href "/s/7e2ed9da90a50773bea5b87b73844669"}
+          [:img {:src "http://s3.amazonaws.com/f.inky.cc/top-examples/7e2ed9da90a50773bea5b87b73844669.png"}]]]
+        [:li.sketch-preview
+         [:div.sketch-meta
+          [:strong "instagram.api"]
+          " by "
+          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+         [:a {:href "/s/f120abd285ebfa91541409c6181deddb"}
+          [:img {:src "http://f.cl.ly/items/0X3c3o2w383E2T122L2o/Screen%20Shot%202013-12-20%20at%201.23.02%20AM.png"}]]]
+        ]]
+      [:section.instructions
+       [:h3 "How-To"]
+       [:div.instructions-list
+        [:ol
+         [:li
+          "Visit "
+          [:code "http://inky.cc/compile?url=url-of-cljs-file"]
+          ". This will compile the provided ClojureScript text and redirect you to the resulting sketch. "
+          [:br]
+          "For example: to compile "
+          [:a {:href "https://gist.github.com/zk/7981902/raw/c5a537e95dcb19cbaf327d069ae04b2524ae80aa/inkyfirst.cljs"} "this gist file"]
+          ", visit "
+          [:a {:href "/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
+          "."]
+         [:li "???"]
+         [:li "Profit"]]]]]}))
 
 (defn gist-source [gist-id]
   (->> (hcl/get (str "https://api.github.com/gists/" gist-id))

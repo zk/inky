@@ -30,11 +30,17 @@
                            (inky.entry/-main))}
   :plugins [[lein-cljsbuild "1.0.0"]] ;; required for heroku deploy
   :cljsbuild {:builds
-              {:dev  {:source-paths ["src/cljs"]
-                      :compiler {:output-to "resources/public/cljs/inky.js"
-                                 :output-dir "resources/public/cljs"
-                                 :optimizations :none
-                                 :source-map true}}
+              {:dev {:source-paths ["src/cljs"]
+                     :compiler {:output-to "resources/public/cljs/inky.js"
+                                :output-dir "resources/public/cljs"
+                                :optimizations :none
+                                :source-map true}}
+
+               :preview {:source-paths ["src/preview"]
+                          :compiler {:output-to "resources/public/preview/preview.js"
+                                     :output-dir "resources/public/preview"
+                                     :optimizations :none
+                                     :source-map true}}
 
                ;; for debugging advanced compilation problems
                :dev-advanced  {:source-paths ["src/cljs"]
