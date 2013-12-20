@@ -11,6 +11,7 @@
         [ring.middleware.session.cookie :only (cookie-store)]
         [ring.util.response :only (response content-type)])
   (:require [ring.adapter.jetty :as jetty]
+            [ring.util.response :as resp]
             [aleph.http :as ah]
             [inky.env :as env]
             [inky.entry :as entry]
@@ -20,7 +21,9 @@
             [clj-http.client :as hcl]
             [inky.compile :as comp]
             [inky.s3 :as s3]
-            [clojure.java.shell :as sh]))
+            [inky.util :as util]
+            [clojure.java.shell :as sh]
+            [clojure.edn :as edn]))
 
 (defn md5
   "Compute the hex MD5 sum of a string."
@@ -149,7 +152,7 @@
 
 (defn in-s3? [hash]
   (try
-    (= 200 (-> (str "http://f.inky.cc/" hash "/code.cljs")
+    (= 200 (-> (str "http://f.inky.cc/" hash "/meta.edn")
                hcl/head
                :status))
     (catch Exception e false)))
@@ -210,6 +213,9 @@
 (defn add-in-progress [hash]
   (swap! in-progress conj hash))
 
+(defn remove-in-progress [hash]
+  (swap! in-progress disj hash))
+
 (defn compiling? [hash]
   (get @in-progress hash))
 
@@ -237,53 +243,81 @@
 (defn $intro []
   ($layout
     {:content [:div
-               [:h1 "Inky is an easy way to sketch and share your ideas in " [:a {:href "/"} "ClojureScript"] "."]]}))
+               [:p "Inky is an easy way to sketch and share your ideas in " [:a {:href "/"} "ClojureScript"] "."]
+               [:ol
+                [:li
+                 "Visit "
+                 [:code "http://inky.cc/compile?url=*url-of-cljs-file*"]
+                 ". For example: to compile this "
+                 [:a {:href "https://gist.github.com/zk/7981902/raw/c5a537e95dcb19cbaf327d069ae04b2524ae80aa/inkyfirst.cljs"} "gist file"]
+                 ", visit "
+                 [:a {:href "http://inky.cc/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
+                 "."]
+                [:li "???"]
+                [:li "Profit"]]
+               [:section
+                [:li ]]]}))
+
+(defn gist-source [gist-id]
+  (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
+       :body
+       util/from-json
+       :files
+       (filter #(or (.endsWith (str (first %)) ".cljs")
+                    (.endsWith (str (first %)) ".clj")))
+       first
+       second
+       :content))
+
+(defn source-by-id [id]
+  (gist-source id))
 
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
                   ($intro))))
-  (GET "/:sketch-id" [sketch-id]
-    (fn [r]
-      (let [url (-> r :params :url)
-            cljs-source (try (slurp url)
-                             (catch Exception e "Whoops!!!!!!!!!"))
-            hash (md5 cljs-source)
-            compiled? (in-s3? hash)]
-        (tpl (merge (parse-meta cljs-source)
-                    {:canvas-url (if compiled?
-                                   (str "http://f.inky.cc/" hash "/code.html")
-                                   (str "/canvas?url=" (url-encode url)))
-                     :source cljs-source})))))
-  (GET "/canvas" [] (fn [r]
-                      (let [url (-> r :params :url)
-                            source (slurp url)
-                            hash (md5 source)
-                            dir (str "/tmp/inky/" hash)
-                            filename (str dir "/code.cljs")
-                            html-filename (str dir "/code.html")
-                            compiled? (in-s3? hash)
-                            compiling? (compiling? hash)]
-                        (cond
-                          (and compiling? (not compiled?)) (render-compiling)
-                          (not compiled?) (do
-                                            (future
-                                              (try
-                                                (println "Compiling" hash url dir)
-                                                (add-in-progress hash)
-                                                (when (.exists (java.io.File. dir))
-                                                  (sh/sh "rm" "-rf" dir))
-                                                (.mkdirs (java.io.File. dir))
-                                                (spit filename dir)
-                                                (spit html-filename (render-compiled hash))
-                                                (compile-cljs hash filename)
-                                                (s3/upload-hash hash (str "/tmp/inky/" hash))
-                                                (println "done compiling" hash)
-                                                (catch Exception e
-                                                  (println e)
-                                                  (.printStackTrace e))))
-                                            (render-compiling))
-                          :else (render-compiled hash)))))
+
+  (GET "/compile" [] (fn [r]
+                       (let [url (-> r :params :url)
+                             source (slurp url)
+                             hash (md5 source)
+                             dir (str "/tmp/inky/" hash)
+                             source-dir (str "/tmp/inky/" hash)
+                             filename (str source-dir "/code.cljs")]
+                         (cond
+                           (compiling? hash) (render-compiling)
+                           (in-s3? hash) (resp/redirect (str "/s/" hash))
+
+                           :else (do (future
+                                       (time
+                                         (try
+                                           (add-in-progress hash)
+                                           (println "Compiling" hash url dir)
+                                           (when (.exists (java.io.File. dir))
+                                             (sh/sh "rm" "-rf" dir))
+                                           (.mkdirs (java.io.File. dir))
+                                           (spit filename source)
+                                           (compile-cljs hash filename)
+                                           (s3/upload-file
+                                             (str dir "/code.js")
+                                             (str hash "/code.js"))
+                                           (s3/put-string
+                                             (str hash "/meta.edn")
+                                             (pr-str (assoc (parse-meta source)
+                                                       :source source)))
+                                           (s3/put-string
+                                             (str hash "/code.html")
+                                             (render-compiled hash)
+                                             {:content-type "text/html;charset=utf-8"})
+                                           #_(s3/upload-hash hash (str "/tmp/inky/" hash))
+                                           (println "done compiling" hash)
+                                           (catch Exception e
+                                             (println e)
+                                             (.printStackTrace e))
+                                           (finally (remove-in-progress hash)))))
+                                     (render-compiling))))))
+
+
   (GET "/check-compiled" [] (fn [r]
                               (let [url (-> r :params :url)]
                                 )))
@@ -308,7 +342,16 @@
                            parse-meta
                            :ns
                            str
-                           (str/replace #"\." "/")))))))
+                           (str/replace #"\." "/"))))))
+
+  (GET "/s/:sketch-id" [sketch-id]
+    (fn [r]
+      (tpl (merge
+             {:ns "ruh.roh"
+              :source "not right"}
+             (->> (slurp (str "http://f.inky.cc/" sketch-id "/meta.edn"))
+                  edn/read-string)
+             {:canvas-url (str "http://f.inky.cc/" sketch-id "/code.html")})))))
 
 (def routes
   (-> _routes

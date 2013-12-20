@@ -19,7 +19,6 @@
     (cljsc/build
       filename
       {:optimizations :advanced
-       :source-map (str "/tmp/inky/" hash "/code.map.js")
        :output-to (str "/tmp/inky/" hash "/code.js")
        :output-dir (str "/tmp/inky/" hash)})))
 
