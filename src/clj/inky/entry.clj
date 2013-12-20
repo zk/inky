@@ -177,36 +177,55 @@
      [:script {:type "text/javascript"
                :src (str "/cljs-compiled/" entry-path ".js")}]]))
 
-(defn render-compiling []
+(defn $layout [{:keys [content body-class head]}]
   (hp/html5
-    [:head
-     [:meta {:http-equiv "refresh" :content "6"}]
-     (style-el
-       :body {:font-family "'Helvetica Neue', Arial, sans-serif"
-              :margin "40px"
-              :line-height "1.5em"
-              :color "black"}
-       :.animate {:-webkit-animation-name "bgcolor"
-                  :-webkit-animation-duration "6s"
-                  :-webkit-animation-iteration-count "infinite"}
-       :p {:font-size "20px"
-           :font-weight "300"
-           :margin-bottom "30px"}
-       :h1 {:font-weight "normal"
-            :margin-bottom "30px"}
-       :.box {:height "230px"}
-       "@-webkit-keyframes bgcolor"
-       {"0%" {:background-color "#3498db"}
-        "20%" {:background-color "#2ecc71"}
-        "40%" {:background-color "#f1c40f"}
-        "60%" {:background-color "#8e44ad"}
-        "80%" {:background-color "#e67e22"}
-        "100%" {:background-color "#3498db"}})]
+    (-> [:head
+         [:link {:rel :stylesheet :href "/css/app.css"}]]
+        (concat head)
+        vec)
     [:body
-     [:h1 "Compiling!"]
-     [:p "This should only take a few seconds, so sit tight and we'll load the results, automatically, when they're ready."]
-     [:p "Results are cached for subsequent loads."]
-     [:div.box.animate]]))
+     (when body-class
+       {:class body-class})
+     [:div.sticky-footer-wrap
+      [:div.container
+       [:div.row
+        [:div.col-sm-8.col-sm-offset-2
+         [:div.row
+          [:header.navbar
+           [:div
+            [:a.navbar-brand {:href "/"}
+             "inky.cc"]
+            [:span.navbar-text ":: Sketch in ClojureScript"]]]
+          [:div.col-sm-12
+           content]]]]]]
+     [:footer
+      [:div.container
+       [:div.row
+        [:div.col-sm-8.col-sm-offset-2
+         "inky.cc brought to you by "
+         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
+         "."]]]]]))
+
+(defn render-compiling []
+  ($layout
+    {:head [[:meta {:http-equiv "refresh" :content "6"}]]
+     :content [:div
+               (style-el
+                 :.animate {:-webkit-animation-name "bgcolor"
+                            :-webkit-animation-duration "6s"
+                            :-webkit-animation-iteration-count "infinite"}
+                 :.box {:height "230px"}
+                 "@-webkit-keyframes bgcolor"
+                 {"0%" {:background-color "#3498db"}
+                  "20%" {:background-color "#2ecc71"}
+                  "40%" {:background-color "#f1c40f"}
+                  "60%" {:background-color "#8e44ad"}
+                  "80%" {:background-color "#e67e22"}
+                  "100%" {:background-color "#3498db"}})
+               [:h1 "Compiling!"]
+               [:p "This should only take a few seconds, so sit tight and we'll load the results, automatically, when they're ready."]
+               [:p "Results are cached for subsequent loads."]
+               [:div.box.animate]]}))
 
 (def in-progress (atom #{}))
 
@@ -223,27 +242,9 @@
   {:headers {"Content-Type" "text/html;utf-8"}
    :body body})
 
-(defn $layout [{:keys [content]}]
-  (hp/html5
-    [:head
-     [:link {:rel :stylesheet :href "/css/app.css"}]]
-    [:body
-     [:header.navbar
-      [:div.container
-       [:div.row
-        [:div.col-md-12
-         [:a.navbar-brand {:href "/"}
-          "inky.cc"]
-         [:span.navbar-text ":: Sketch in ClojureScript"]]]]]
-     [:div.container
-      [:div.row
-       [:div.col-md-12
-        content]]]]))
-
 (defn $intro []
   ($layout
     {:content [:div
-               [:p "Inky is an easy way to sketch and share your ideas in " [:a {:href "/"} "ClojureScript"] "."]
                [:ol
                 [:li
                  "Visit "
@@ -255,8 +256,24 @@
                  "."]
                 [:li "???"]
                 [:li "Profit"]]
-               [:section
-                [:li ]]]}))
+               [:section.sketch-examples
+                [:h3 "Recent Sketches"]
+                [:ul
+                 [:li.sketch-preview
+                  [:div.sketch-meta
+                   [:strong "first"]
+                   " by "
+                   [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+                  [:a {:href "/s/dc820ddc03b6e8e1c9ff60572ff873c5"}
+                   [:img {:src "http://f.cl.ly/items/06430H393A2M2T1H1N3e/Screen%20Shot%202013-12-19%20at%204.01.24%20PM.png"}]]]
+                 [:li.sketch-preview
+                  [:div.sketch-meta
+                   [:strong "ten.k.processes.redux"]
+                   " by "
+                   [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+                  [:a {:href "/s/7e2ed9da90a50773bea5b87b73844669"}
+                   [:img {:src "http://s3.amazonaws.com/f.inky.cc/top-examples/7e2ed9da90a50773bea5b87b73844669.png"}]]]
+                 ]]]}))
 
 (defn gist-source [gist-id]
   (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
@@ -304,7 +321,9 @@
                                            (s3/put-string
                                              (str hash "/meta.edn")
                                              (pr-str (assoc (parse-meta source)
-                                                       :source source)))
+                                                       :source source
+                                                       :url url
+                                                       :created (System/currentTimeMillis))))
                                            (s3/put-string
                                              (str hash "/code.html")
                                              (render-compiled hash)
@@ -346,12 +365,39 @@
 
   (GET "/s/:sketch-id" [sketch-id]
     (fn [r]
-      (tpl (merge
-             {:ns "ruh.roh"
-              :source "not right"}
-             (->> (slurp (str "http://f.inky.cc/" sketch-id "/meta.edn"))
-                  edn/read-string)
-             {:canvas-url (str "http://f.inky.cc/" sketch-id "/code.html")})))))
+      (let [canvas-url (str "http://f.inky.cc/" sketch-id "/code.html")
+            {:keys [ns doc source url created]}
+            (->> (slurp (str "http://f.inky.cc/" sketch-id "/meta.edn"))
+                 edn/read-string)]
+        ($layout
+          {:body-class :sketch-page
+           :content
+           [:body
+            [:div.wrapper
+             [:section
+              [:h1 ns]
+              [:p (format-doc doc)]]
+             [:section
+              [:iframe {:src canvas-url}]
+              [:div.controls
+               [:a {:href canvas-url} "full-screen"]]]
+             [:section
+              [:pre {:class "brush: clojure"} source]]
+             [:section.meta
+              "Created at "
+              (or created "donno")
+              ", from "
+              (if url
+                [:a {:href url} url]
+                " we have no idea")
+              "."]
+             [:script {:type "text/javascript"}
+              (str
+                (slurp "syntaxhighlighterclj.js") ";"
+                "SyntaxHighlighter.defaults.toolbar=false;"
+                "SyntaxHighlighter.defaults.gutter=true;"
+                "SyntaxHighlighter.all();")]]]}))))
+  (GET "/show-compiling" [] (render-compiling)))
 
 (def routes
   (-> _routes
