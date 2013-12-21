@@ -25,6 +25,14 @@
             [clojure.java.shell :as sh]
             [clojure.edn :as edn]))
 
+(def ga-tag
+  [:script (str "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+  ga('create', '" (env/str :ga-tracking-id "") "', '" (env/str :ga-tracking-host "") "');
+  ga('send', 'pageview');")])
+
 (defn md5
   "Compute the hex MD5 sum of a string."
   [#^String str]
@@ -151,7 +159,8 @@
        [:div.row
         [:div.col-sm-121
          "inky.cc is brought to you by "
-         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]]))
+         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]
+     ga-tag]))
 
 (defn render-compiling []
   ($layout
