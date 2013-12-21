@@ -11,15 +11,17 @@
 
 (defn env
   "Retrieve environment variables by clojure keyword style.
-   ex. (env :user) ;=> \"zk\""
+   ex. (env :user) ;=> \"zk\". Called w/o default throws an
+  exception."
   [sym & [default]]
   (or (System/getenv (clj->env sym))
-      default))
+      default
+      (throw (Exception. (str "Missing env var " (clj->env sym) ".")))))
 
 (defn int
   "Retrieve and parse int env var."
   [sym & [default]]
-  (if-let [env-var (env sym)]
+  (if-let [env-var (env sym default)]
     (Integer/parseInt env-var)
     default))
 
@@ -30,6 +32,6 @@
 
 (defn bool
   [sym & [default]]
-  (if-let [env-var (env sym)]
+  (if-let [env-var (env sym default)]
     (Boolean/parseBoolean env-var)
     default))
