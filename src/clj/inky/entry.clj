@@ -247,7 +247,7 @@
           [:strong "haiku"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/697d0a5189c1f04e66c09e3968c194f4"}
+         [:a {:href "/s/5ac8ba0ce4cb11c3d518d25357a8b11b"}
           [:img {:src "http://f.cl.ly/items/043q3l0T0q3x052V0D11/Screen%20Shot%202013-12-20%20at%206.24.45%20PM.png"}]]]
         ]]
       [:section.instructions
