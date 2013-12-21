@@ -136,7 +136,7 @@
      [:div.sticky-footer-wrap
       [:div.container
        [:div.row
-        [:div.col-sm-8.col-sm-offset-2
+        [:div.col-sm-12
          [:div.row
           [:header.navbar
            [:div
@@ -148,7 +148,7 @@
      [:footer
       [:div.container
        [:div.row
-        [:div.col-sm-8.col-sm-offset-2
+        [:div.col-sm-121
          "inky.cc is brought to you by "
          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]]))
 
@@ -214,7 +214,9 @@
              reverse)
         "."]
        [:p
-        "Drop me a line at " [:a {:href "https://twitter.com/heyzk"} "@heyzk"] " if you'd like your library to be available to inky sketches."]]
+        "Drop me a line at "
+        [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
+        " if you'd like your library to be available to inky sketches."]]
       [:section.sketch-examples
        [:h3 "Recent Sketches"]
        [:ul
@@ -237,8 +239,8 @@
           [:strong "instagram.api"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/f120abd285ebfa91541409c6181deddb"}
-          [:img {:src "http://f.cl.ly/items/0X3c3o2w383E2T122L2o/Screen%20Shot%202013-12-20%20at%201.23.02%20AM.png"}]]]
+         [:a {:href "/s/697d0a5189c1f04e66c09e3968c194f4"}
+          [:img {:src "http://f.cl.ly/items/002R2X1V2S2v26451E0O/Screen%20Shot%202013-12-20%20at%203.04.04%20PM.png"}]]]
         ]]
       [:section.instructions
        [:h3 "How-To"]
@@ -255,7 +257,8 @@
           [:a {:href "/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
           "."]
          [:li "???"]
-         [:li "Profit"]]]]]}))
+         [:li "Profit"]]]
+       [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]]}))
 
 (defn gist-source [gist-id]
   (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
@@ -384,7 +387,11 @@
               [:div.controls
                [:a {:href canvas-url} "full-screen"]]]
              [:section
-              [:pre {:class "brush: clojure"} source]]
+              [:pre {:class "brush: clojure"}
+               (when source
+                 (-> source
+                     (str/replace #">" "&gt;")
+                     (str/replace #"<" "&lt;")))]]
              [:section.sketch-meta
               "Created at "
               (or created "donno")

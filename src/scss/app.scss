@@ -21,6 +21,10 @@ html, body {
   color: #333;
 }
 
+.container {
+  max-width: 760px;
+}
+
 body {
   font-size: 16px;
 }
@@ -139,9 +143,9 @@ ol li {
   }
 
   .syntaxhighlighter {
-    font-size: 15px;
+    font-size: 14px;
     font-family: monospace;
-    white-space: no-wrap;
+    white-space: nowrap;
     overflow: auto;
   }
 
@@ -160,9 +164,6 @@ ol li {
 }
 
 .intro-page {
-  .instructions {
-  }
-
   .sketch-preview {
     margin-bottom: 30px;
 
@@ -183,6 +184,7 @@ ol li {
   .instructions-list {
     padding: 20px;
     background-color: #f8f8f8;
+    margin-bottom: 20px;
   }
 
   ol {

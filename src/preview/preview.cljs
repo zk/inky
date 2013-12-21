@@ -2,54 +2,66 @@
   (:require [inky.ajax :refer (ajax)]
             [inky.canvas :refer (page-style!)]
             [dommy.core :as dom]
-            [clojure.string :as str])
-  (:require-macros [dommy.macros :refer [sel1 node]]))
+            [clojure.string :as str]
+            [cljs.core.async :as async
+             :refer [<!-- -->! chan put! timeout]])
+  (:require-macros [dommy.macros :refer [sel1 node]]
+                   [cljs.core.async.macros :refer [go go-loop]]))
+
+(enable-console-print!)
+
+(defn prefix
+  "Given a css3 prop and value, return a map with all vendor prefixed
+  props."
+  [k v]
+  (->> ["-webkit" "-moz" "-ie" "-o"]
+       (map #(str % "-" (name k)))
+       (cons (name k))
+       (map #(vector % v))
+       (into {})))
+
+(def full-size {:width "100%" :height "100%"})
 
 (page-style!
+  "html, body, .canvas" full-size
   :body {:margin "0"
          :padding "0"
          :font-family "'Helvetica Neue', Arial, sans-serif"}
-  :img {:max-width "100%"}
-  :.flip-container {:perspective "1000px"
-                    :-webkit-perspective "1000px"
-                    :-moz-perspective "1000px"
-                    :display "inline-block"
-                    :width "25%"}
+  :.flip-container (merge
+                     (prefix :perspective "1000px")
+                     {:display "inline-block" :width "25%"})
 
-  ".flip-container.hover .flipper"
-  {:-webkit-transform "rotateY(180deg)"
-   :transform "rotateY(180deg)"}
+  ".flip-container.hover .flipper" (prefix :transform "rotateY(180deg)")
+  ".flip-container.hover .back" {:z-index "3"}
+  ".front, .back" (prefix :backface-visibility "hidden")
 
-  ".flip-container.hover .back"
-  {:z-index "3"}
+  ".front img, .back img" {:width "100%"}
 
-  ".front, .back"
-  {:backface-visiblity "hidden"
-   :-webkit-backface-visibility "hidden"
-   :-moz-backface-visibility "hidden"
-   :-ie-backface-visibility "hidden"
-   :cursor "pointer"}
+  :.front {:z-index "0"
+           :background-size "cover"
+           :position "relative"}
 
-  ".front img, .back img" {:opacity "0"}
-
-  :.front {:z-index "0"}
-  :.back {:transform "rotateY(180deg)"
-          :-webkit-transform "rotateY(180deg)"
-          :-moz-transform "rotateY(180deg)"
-          :-ie-transform "rotateY(180deg)"
-          :position "absolute"
-          :top "0"
-          :left "0"
-          :right "0"
-          :bottom "0"
-          :background-color "white"
-          :padding "30px"}
-  :.flipper {:transition "0.3s ease"
-             :transform-style "preserve-3d"
-             :-webkit-transform-style "preserve-3d"
-             :-moz-transform-style "preserve-3d"
-             :-ie-transform-style "preserve-3d"
-             :position "relative"}
+  ".image-meta" {:position "absolute"
+                 :bottom "0" :left "0" :right "0"
+                 :background-color "rgba(0,0,0,0.6)"
+                 :z-index "3"
+                 :padding "10px"
+                 :font-size "12px"
+                 :color "white"}
+  ".image-meta a" {:color "#428bca"}
+  ".image-meta a:hover" {:color "#2a6496"}
+  :.back (merge
+           (prefix :transform "rotateY(180deg)")
+           {:position "absolute"
+            :top "0"
+            :left "0"
+            :right "0"
+            :bottom "0"
+            :background-color "white"})
+  :.flipper (merge
+              (prefix :transition "0.3s ease")
+              (prefix :transform-style "preserve-3d")
+              {:position "relative"})
   :.meta {:font-size "12px"}
   ".meta .user" {:color "#555"}
   :.error {:text-align "center"
@@ -67,7 +79,7 @@
                       (apply str)))
                "...")))
 
-(defn timeout [f ms]
+(defn js-timeout [f ms]
   (.setTimeout js/window f ms))
 
 (defn clear-timeout [t]
@@ -82,7 +94,7 @@
         js-tag (node [:script {:type "text/javascript"
                                :src (str url "&callback=" cb-id)}])
         timer (when timeout-ms
-                (timeout
+                (js-timeout
                   (fn []
                     (aset js/window cb-id nil)
                     (dom/remove! js-tag)
@@ -98,42 +110,86 @@
                                   (dom/remove! js-tag)))
     (dom/append! (sel1 :body) js-tag)))
 
-(defn $card [{:keys [image link comments-count username caption-text]}]
-  (let [$front (node
+(defn $card [chan {:keys [image link comments-count username caption-text]}]
+  (let [$front-link (node [:a {:href link :target "_blank"} "@" username])
+        $back-link (node [:a {:href link :target "_blank"} "@" username])
+        $front-img (node [:img {:src image}])
+        $back-img (node [:img {:src image}])
+        $front (node
                  [:div.front
-                  {:style (str "background-image: url('" image "')")}
-                  [:img {:src image}]])
+                  $front-img
+                  [:div.image-meta
+                   $front-link]])
         $back (node
                 [:div.back
-                 [:div.meta
-                  [:div.caption-text (ellipsis 100 caption-text)]
-                  [:br]
-                  [:div.user "@" username]]])
+                 $back-img
+                 [:div.image-meta
+                  $back-link]])
         $n (node [:div.flip-container
                   [:div.flipper
                    $front
-                   $back]])]
-    (dom/listen! $front :click #(dom/toggle-class! $n :hover))
-    (dom/listen! $back :click #(dom/toggle-class! $n :hover))
+                   $back]])
+        front (atom true)
+        update (fn [{:keys [image link comments-count username caption-text]}]
+                 (let [$img (if @front $back-img $front-img)
+                       $link (if @front $back-link $front-link)]
+                   (dom/set-attr! $img :src image)
+                   (dom/set-attr! $link :href link)
+                   (dom/set-text! $link (str "@" username)))
+                 (swap! front not))]
+    (go
+      (while true
+        (let [ig (<! chan)]
+          (update ig)
+          (<! (timeout (+ 1000 (rand 2000))))
+          (dom/toggle-class! $n :hover))))
+    (dom/listen! $front-link :click #(.stopPropagation %))
+    (dom/listen! $back-link :click #(.stopPropagation %))
     $n))
 
+(defn parse-ig-res [res]
+  (->> (js->clj res :keywordize-keys true)
+       :data
+       (map #(hash-map
+               :caption-text (-> % :caption :text)
+               :username (-> % :user :username)
+               :comments-count (-> % :comments :count)
+               :image (-> % :images :low_resolution :url)
+               :link (:link %)))
+       (filter :image)))
+
+(defn run-loop [chans]
+  (let [ig-res-chan (chan)]
+    (go
+      (while true
+        (<! (timeout 5000))
+        (jsonp
+          ;; Instagram Endpoint
+          (str "https://api.instagram.com/v1/media/popular"
+               "?client_id=602cd47b69b642dd8b18fe54255f93cd")
+          (fn [res]
+            (put! ig-res-chan res))
+          10000
+          (fn [& args]))
+        (let [res (<! ig-res-chan)]
+          (doseq [[res chan] (map #(vector %1 %2)
+                               (parse-ig-res res)
+                               (shuffle chans))]
+            (put! chan res)))))))
 
 (defn results-handler [canvas]
   (fn [res]
-    (let [grams (->> (js->clj res :keywordize-keys true)
-                     :data
-                     (map #(hash-map
-                             :caption-text (-> % :caption :text)
-                             :username (-> % :user :username)
-                             :comments-count (-> % :comments :count)
-                             :image (-> % :images :low_resolution :url)
-                             :link (:link %)))
-                     (filter :image)
-                     (take 16))]
+    (let [n 16
+          grams (take n (parse-ig-res res))
+          chans (repeatedly n #(chan))]
+      (dom/clear! canvas)
       (dom/append! canvas
-        (map $card grams)))))
+        (map #($card %1 %2) chans grams))
+      (run-loop chans))))
 
 (def canvas (sel1 :.canvas))
+
+(dom/append! canvas [:h1.error "Loading..."])
 
 (jsonp
   ;; Instagram Endpoint
