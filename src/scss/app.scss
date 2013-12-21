@@ -65,6 +65,7 @@ h3 {
   margin-top: 0;
   margin-bottom: 0.5em;
   color: #555;
+  text-transform: uppercase;
   //font-family: 'Open Sans', sans-serif;
 }
 
@@ -191,5 +192,10 @@ ol li {
     font-size: 18px;
     font-family: 'PT Serif', serif;
     line-height: 1.6em;
+  }
+
+  .sketch-examples ul {
+    padding: 20px;
+    background-color: rgba(0,0,0,0.02);
   }
 }
