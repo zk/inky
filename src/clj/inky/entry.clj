@@ -194,6 +194,11 @@
    ["Javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
    ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]])
 
+(def previews
+  [["5ac8ba0ce4cb11c3d518d25357a8b11b"
+    "@heyzk"
+    ""]])
+
 (defn $intro []
   ($layout
     {:head [[:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]]
@@ -226,29 +231,29 @@
           [:strong "first"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/dc820ddc03b6e8e1c9ff60572ff873c5"}
-          [:img {:src "http://f.cl.ly/items/06430H393A2M2T1H1N3e/Screen%20Shot%202013-12-19%20at%204.01.24%20PM.png"}]]]
+         [:a {:href "/s/41cbe11f985b27aa8ed947521e776d64"}
+          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/first.jpg"}]]]
         [:li.sketch-preview
          [:div.sketch-meta
           [:strong "ten.k.processes.redux"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
          [:a {:href "/s/7e2ed9da90a50773bea5b87b73844669"}
-          [:img {:src "http://s3.amazonaws.com/f.inky.cc/top-examples/7e2ed9da90a50773bea5b87b73844669.png"}]]]
+          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/tenkredux.jpg"}]]]
         [:li.sketch-preview
          [:div.sketch-meta
           [:strong "instagram.api"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
          [:a {:href "/s/697d0a5189c1f04e66c09e3968c194f4"}
-          [:img {:src "http://f.cl.ly/items/0h46002N1N1l363d062I/Screen%20Shot%202013-12-20%20at%206.26.41%20PM.png"}]]]
+          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/instagram.jpg"}]]]
         [:li.sketch-preview
          [:div.sketch-meta
           [:strong "haiku"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
          [:a {:href "/s/5ac8ba0ce4cb11c3d518d25357a8b11b"}
-          [:img {:src "http://f.cl.ly/items/043q3l0T0q3x052V0D11/Screen%20Shot%202013-12-20%20at%206.24.45%20PM.png"}]]]
+          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/haiku.jpg"}]]]
         ]]
       [:section.instructions
        [:h3 "How-To"]
