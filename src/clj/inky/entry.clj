@@ -127,6 +127,7 @@
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
     (-> [:head
+         #_[:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]
          [:link {:rel :stylesheet :href "/css/app.css"}]]
         (concat head)
         vec)
@@ -240,7 +241,14 @@
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
          [:a {:href "/s/697d0a5189c1f04e66c09e3968c194f4"}
-          [:img {:src "http://f.cl.ly/items/002R2X1V2S2v26451E0O/Screen%20Shot%202013-12-20%20at%203.04.04%20PM.png"}]]]
+          [:img {:src "http://f.cl.ly/items/0h46002N1N1l363d062I/Screen%20Shot%202013-12-20%20at%206.26.41%20PM.png"}]]]
+        [:li.sketch-preview
+         [:div.sketch-meta
+          [:strong "haiku"]
+          " by "
+          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
+         [:a {:href "/s/697d0a5189c1f04e66c09e3968c194f4"}
+          [:img {:src "http://f.cl.ly/items/043q3l0T0q3x052V0D11/Screen%20Shot%202013-12-20%20at%206.24.45%20PM.png"}]]]
         ]]
       [:section.instructions
        [:h3 "How-To"]
