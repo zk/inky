@@ -24,7 +24,9 @@
                  [unk "0.9.1"]
                  [com.amazonaws/aws-java-sdk "1.6.8"]
                  [tailrecursion/javelin "2.4.0"]
-                 [prismatic/dommy "0.1.2"]]
+                 [prismatic/dommy "0.1.2"]
+                 [com.cemerick/double-check "0.5.4-SNAPSHOT"]
+                 [com.keminglabs/c2 "0.2.3"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
                            (inky.entry/-main))}
@@ -37,10 +39,18 @@
                                 :source-map true}}
 
                :preview {:source-paths ["src/preview"]
-                          :compiler {:output-to "resources/public/preview/preview.js"
-                                     :output-dir "resources/public/preview"
-                                     :optimizations :none
-                                     :source-map true}}
+                         :compiler {:output-to "resources/public/preview/preview.js"
+                                    :output-dir "resources/public/preview"
+                                    :optimizations :none
+                                    :source-map true
+                                    :libs [""]}}
+
+               :gists {:source-paths ["src/gists"]
+                       :compiler {:output-to "resources/public/gists/gists.js"
+                                  :output-dir "resources/public/gists"
+                                  :optimizations :none
+                                  :source-map true
+                                  :libs [""]}}
 
                ;; for debugging advanced compilation problems
                :dev-advanced  {:source-paths ["src/cljs"]

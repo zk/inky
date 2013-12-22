@@ -11,5 +11,6 @@ pom.xml.asc
 /resources/public/cljs-compiled
 /resources/public/css
 /resources/public/preview
+/resources/public/gists
 /src/scss/.sass-cache
 /.sass-cache

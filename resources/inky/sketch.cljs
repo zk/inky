@@ -35,15 +35,14 @@
 (defn content! [& body]
   (let [s (sel1 :.sketch)]
     (dom/clear! s)
-    (dom/append! s)))
+    (dom/append! s body)))
 
-(defn prefix
+(defn vprefix
   "Given a css3 prop and value, return a map with all vendor prefixed
   props."
   [k v]
-  (->> ["-webkit" "-moz" "-ie" "-o"]
-       (map #(str % "-" (name k)))
-       (cons (name k))
+  (->> ["" "-webkit-" "-moz-" "-ie-" "-o-"]
+       (map #(str % (name k)))
        (map #(vector % v))
        (into {})))
 
@@ -73,4 +72,9 @@
            :font-weight "500"}
      "h2" {:font-size "26px"}
      "h3" {:font-size "22px"}
-     "h4" {:font-size "18px"}]))
+     "h4" {:font-size "18px"}
+     "code" {:font-family "'Andale Mono', monospace"}
+     "a" {:color "#428bca"
+          :text-decoration "none"}
+     "a:hover" {:color "#2a6496"
+                :text-decoration "underline"}]))

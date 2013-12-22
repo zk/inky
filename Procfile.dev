@@ -1,6 +1,6 @@
 web: lein repl :headless
 sass: sass --watch src/scss:resources/public/css
-#cljs: lein trampoline cljsbuild auto dev
+cljs: lein trampoline cljsbuild auto gists
 #mongo: mongod
 
 # Refresh 1st tab of chrome when fs changes are seen

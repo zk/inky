@@ -120,17 +120,17 @@
      [:script {:type "text/javascript"
                :src (str "http://f.inky.cc/" hash "/code.js")}]]))
 
-(defn render-dev [hash entry-path]
+(defn render-dev [ns]
   (hp/html5
     [:head]
     [:body
      [:div.sketch]
      [:script {:type "text/javascript"
-               :src (str "/cljs-compiled/goog/base.js")}]
+               :src "/gists/goog/base.js"}]
      [:script {:type "text/javascript"
-               :src (str "/cljs-compiled/out.js")}]
-     [:script {:type "text/javascript"
-               :src (str "/cljs-compiled/" entry-path ".js")}]]))
+               :src "/gists/gists.js"}]
+     [:script {:type "text/javascript"}
+      "goog.require(\"" ns "\");"]]))
 
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
@@ -198,10 +198,23 @@
   {:headers {"Content-Type" "text/html;utf-8"}
    :body body})
 
+(defn gist-source [gist-id]
+  (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
+       :body
+       util/from-json
+       :files
+       (filter #(or (.endsWith (str (first %)) ".cljs")
+                    (.endsWith (str (first %)) ".clj")))
+       first
+       second
+       :content))
+
 (def cljs-libs
-  [["Dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
-   ["Javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
-   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]])
+  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
+   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
+   ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
+   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
+   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]])
 
 (def previews
   [["5ac8ba0ce4cb11c3d518d25357a8b11b"
@@ -216,7 +229,15 @@
      [:div
       [:section.about
        [:h3 "What?"]
-       [:p "Inky.cc is a place to compile and host short snippets of ClojureScript. We'll bring the environment, you bring the code."]
+       [:p
+        "Inky.cc is a place to compile and host short snippets of ClojureScript, a la "
+        [:a {:href "http://bl.ocks.org"} "blocks"]
+        ", "
+        [:a {:href "http://jsfiddle.net/"} "jsfiddle"]
+        ", and "
+        [:a {:href "http://codepen.io/"} "codepen"]
+        "."
+        " We'll bring the environment, you bring the code."]
        [:p
         "We've included several cljs libraries for you to use, including "
         (->> cljs-libs
@@ -276,16 +297,7 @@
          [:li "Profit"]]]
        [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]]}))
 
-(defn gist-source [gist-id]
-  (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
-       :body
-       util/from-json
-       :files
-       (filter #(or (.endsWith (str (first %)) ".cljs")
-                    (.endsWith (str (first %)) ".clj")))
-       first
-       second
-       :content))
+
 
 (defn source-by-id [id]
   (gist-source id))
@@ -310,10 +322,31 @@
                         (drop half-take-out)
                         (apply str)))))))
 
+(defn safe-slurp [s]
+  (when s
+    (try
+      (slurp s)
+      (catch java.io.FileNotFoundException e nil))))
+
+(defn guess-gist-ns [root-path]
+  (->> (file-seq (java.io.File. root-path))
+       (map #(.getAbsolutePath %))
+       (filter #(.endsWith % ".cljs"))
+       first
+       safe-slurp
+       parse-meta
+       :ns))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
                   ($intro))))
+
+  (GET "/dev" [] (fn [r]
+                   (let [ns (or (-> r :params :ns)
+                                (guess-gist-ns "src/gists"))]
+                     (html-response
+                       (render-dev ns)))))
 
   (GET "/compile" [] (fn [r]
                        (let [url (-> r :params :url)

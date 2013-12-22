@@ -21,7 +21,8 @@
       {:optimizations :advanced
        :pretty-print false
        :output-to (str "/tmp/inky/" hash "/code.js")
-       :output-dir (str "/tmp/inky/" hash)})))
+       :output-dir (str "/tmp/inky/" hash)
+       :libs [""]})))
 
 (defn compile-cljs-none [hash filename]
   (binding [env/*compiler* (atom {})]
@@ -30,4 +31,5 @@
       {:optimizations :none
        :source-map true
        :output-to "resources/public/cljs-compiled/"
-       :output-dir "resources/public/cljs-compiled/"})))
+       :output-dir "resources/public/cljs-compiled/"
+       :libs [""]})))
