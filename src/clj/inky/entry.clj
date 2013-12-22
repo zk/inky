@@ -240,28 +240,28 @@
           [:strong "first"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/41cbe11f985b27aa8ed947521e776d64"}
+         [:a {:href "/s/2ebb898065c9897f8cc0a8bbbeeeb849"}
           [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/first.jpg"}]]]
         [:li.sketch-preview
          [:div.sketch-meta
           [:strong "ten.k.processes.redux"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/7e2ed9da90a50773bea5b87b73844669"}
+         [:a {:href "/s/89fc931cd9cee41db28ebfa8cfcc526b"}
           [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/tenkredux.jpg"}]]]
         [:li.sketch-preview
          [:div.sketch-meta
           [:strong "instagram.api"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/697d0a5189c1f04e66c09e3968c194f4"}
+         [:a {:href "/s/98dba5001b5eb7017de1795c51aebf09"}
           [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/instagram.jpg"}]]]
         [:li.sketch-preview
          [:div.sketch-meta
           [:strong "haiku"]
           " by "
           [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/5ac8ba0ce4cb11c3d518d25357a8b11b"}
+         [:a {:href "/s/a26d252df6ff92759533ca8e51ad3042"}
           [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/haiku.jpg"}]]]
         ]]
       [:section.instructions

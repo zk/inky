@@ -33,7 +33,9 @@
             (apply str))])))
 
 (defn content! [& body]
-  (dom/append! (sel1 :.sketch) body))
+  (let [s (sel1 :.sketch)]
+    (dom/clear! s)
+    (dom/append! s)))
 
 ;; meyer reset
 
