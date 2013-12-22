@@ -15,8 +15,7 @@
   exception."
   [sym & [default]]
   (or (System/getenv (clj->env sym))
-      default
-      (throw (Exception. (clojure.core/str "Missing env var " (clj->env sym) ".")))))
+      default))
 
 (defn int
   "Retrieve and parse int env var."
