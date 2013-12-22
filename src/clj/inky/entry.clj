@@ -116,7 +116,7 @@
   (hp/html5
     [:head]
     [:body
-     [:div.canvas]
+     [:div.sketch]
      [:script {:type "text/javascript"
                :src (str "http://f.inky.cc/" hash "/code.js")}]]))
 
@@ -124,7 +124,7 @@
   (hp/html5
     [:head]
     [:body
-     [:div.canvas]
+     [:div.sketch]
      [:script {:type "text/javascript"
                :src (str "/cljs-compiled/goog/base.js")}]
      [:script {:type "text/javascript"
@@ -363,36 +363,9 @@
                                            (finally (remove-in-progress hash)))))
                                      (render-compiling))))))
 
-
-  (GET "/check-compiled" [] (fn [r]
-                              (let [url (-> r :params :url)]
-                                )))
-  (GET "/dev" [] (fn [r]
-                   (let [url (-> r :params :url)
-                         source (slurp url)
-                         hash (md5 source)
-                         dir (str "/tmp/inky/" hash)
-                         source-dir (str "/tmp/inky-source/" hash)
-                         filename (str source-dir "/first.cljs")
-                         start (System/currentTimeMillis)]
-                     (try
-                       (.mkdirs (java.io.File. source-dir))
-                       (comp/compile-cljs-none hash "examples")
-                       (println "done compiling" hash (- (System/currentTimeMillis) start))
-                       (catch Exception e
-                         (println e)
-                         (.printStackTrace e)))
-                     (render-dev
-                       hash
-                       (-> source
-                           parse-meta
-                           :ns
-                           str
-                           (str/replace #"\." "/"))))))
-
   (GET "/s/:sketch-id" [sketch-id]
     (fn [r]
-      (let [canvas-url (str "/s/" sketch-id "/canvas")
+      (let [sketch-url (str "/s/" sketch-id "/sketch")
             {:keys [ns doc source url created]}
             (->> (slurp (str "http://f.inky.cc/" sketch-id "/meta.edn"))
                  edn/read-string)]
@@ -405,9 +378,9 @@
               [:h1 ns]
               [:p (format-doc doc)]]
              [:section
-              [:iframe {:src canvas-url}]
+              [:iframe {:src sketch-url}]
               [:div.controls
-               [:a {:href canvas-url} "full-screen"]]]
+               [:a {:href sketch-url} "full-screen"]]]
              [:section
               [:pre {:class "brush: clojure"}
                (when source
@@ -428,7 +401,7 @@
                 "SyntaxHighlighter.defaults.toolbar=false;"
                 "SyntaxHighlighter.defaults.gutter=true;"
                 "SyntaxHighlighter.all();")]]]}))))
-  (GET "/s/:sketch-id/canvas" [sketch-id]
+  (GET "/s/:sketch-id/sketch" [sketch-id]
     (fn [r]
       (render-compiled sketch-id)))
 
