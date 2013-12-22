@@ -9,7 +9,7 @@
          keyword-params
          reload]
         [ring.middleware.session.cookie :only (cookie-store)]
-        [ring.util.response :only (response content-type)])
+        [ring.util.response :only (response content-type redirect)])
   (:require [ring.adapter.jetty :as jetty]
             [ring.util.response :as resp]
             [aleph.http :as ah]
@@ -390,47 +390,56 @@
                                            (finally (remove-in-progress hash)))))
                                      (render-compiling))))))
 
-  (GET "/s/:sketch-id" [sketch-id]
+  (GET "/:login/:gist-id" [login gist-id]
     (fn [r]
-      (let [sketch-url (str "/s/" sketch-id "/sketch")
-            {:keys [ns doc source url created]}
-            (->> (slurp (str "http://f.inky.cc/" sketch-id "/meta.edn"))
-                 edn/read-string)]
-        ($layout
-          {:body-class :sketch-page
-           :content
-           [:body
-            [:div.wrapper
-             [:section
-              [:h1 ns]
-              [:p (format-doc doc)]]
-             [:section
-              [:iframe {:src sketch-url}]
-              [:div.controls
-               [:a {:href sketch-url} "full-screen"]]]
-             [:section
-              [:pre {:class "brush: clojure"}
-               (when source
-                 (-> source
-                     (str/replace #">" "&gt;")
-                     (str/replace #"<" "&lt;")))]]
-             [:section.sketch-meta
-              "Created at "
-              (or created "donno")
-              " from "
-              (if url
-                [:a {:href url} (squeeze 60 url)]
-                " we have no idea")
-              "."]
-             [:script {:type "text/javascript"}
-              (str
-                (slurp "syntaxhighlighterclj.js") ";"
-                "SyntaxHighlighter.defaults.toolbar=false;"
-                "SyntaxHighlighter.defaults.gutter=true;"
-                "SyntaxHighlighter.all();")]]]}))))
-  (GET "/s/:sketch-id/sketch" [sketch-id]
+      (let [recompile? (-> r :params :recompile)]
+        (cond
+          (compiling? gist-id) (render-compiling)
+          (and (in-s3? gist-id)
+               (not recompile?)) (render-compiled gist-id)
+          :else (do
+                  (add-in-progress gist-id)
+                  (let [url (-> r :params :url)
+                        source (gist-source gist-id)
+                        hash gist-id
+                        dir (str "/tmp/inky/" hash)
+                        source-dir (str "/tmp/inky/" hash)
+                        filename (str source-dir "/code.cljs")]
+                    (future
+                      (time
+                        (try
+                          (println "Compiling" hash url dir)
+                          (when (.exists (java.io.File. dir))
+                            (sh/sh "rm" "-rf" dir))
+                          (.mkdirs (java.io.File. dir))
+                          (spit filename source)
+                          (compile-cljs hash filename)
+                          (s3/upload-file
+                            (str dir "/code.js")
+                            (str hash "/code.js"))
+                          (s3/put-string
+                            (str hash "/meta.edn")
+                            (pr-str (assoc (parse-meta source)
+                                      :source source
+                                      :url url
+                                      :created (System/currentTimeMillis))))
+                          (s3/put-string
+                            (str hash "/code.html")
+                            (render-compiled hash)
+                            {:content-type "text/html;charset=utf-8"})
+                          #_(s3/upload-hash hash (str "/tmp/inky/" hash))
+                          (println "done compiling" hash)
+                          (catch Exception e
+                            (println e)
+                            (.printStackTrace e))
+                          (finally (remove-in-progress hash)))))
+                    (if recompile?
+                      (redirect (str "/" login "/" gist-id))
+                      (render-compiling))))))))
+
+  (GET "/:login/:gist-id/sketch" [login gist-id]
     (fn [r]
-      (render-compiled sketch-id)))
+      (render-compiled gist-id)))
 
   (GET "/show-compiling" [] (render-compiling)))
 
