@@ -30,7 +30,7 @@
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
   m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', '" (env/str :ga-tracking-id "") "', '" (env/str :ga-tracking-host "") "');
+  ga('create', '" (env/str :ga-tracking-id) "', '" (env/str :ga-tracking-host) "');
   ga('send', 'pageview');")])
 
 (defn md5
@@ -271,13 +271,7 @@
          [:li
           "Visit "
           [:code "http://inky.cc/compile?url=url-of-cljs-file"]
-          ". This will compile the provided ClojureScript text and redirect you to the resulting sketch. "
-          [:br]
-          "For example: to compile "
-          [:a {:href "https://gist.github.com/zk/7981902/raw/c5a537e95dcb19cbaf327d069ae04b2524ae80aa/inkyfirst.cljs"} "this gist file"]
-          ", visit "
-          [:a {:href "/compile?url=https%3A%2F%2Fgist.github.com%2Fzk%2F7981902%2Fraw%2Fc5a537e95dcb19cbaf327d069ae04b2524ae80aa%2Finkyfirst.cljs"} "this url"]
-          "."]
+          ". This will compile the provided ClojureScript text and redirect you to the resulting sketch."]
          [:li "???"]
          [:li "Profit"]]]
        [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]]}))
