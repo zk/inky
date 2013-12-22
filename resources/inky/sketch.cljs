@@ -37,8 +37,15 @@
     (dom/clear! s)
     (dom/append! s)))
 
-;; meyer reset
-
+(defn prefix
+  "Given a css3 prop and value, return a map with all vendor prefixed
+  props."
+  [k v]
+  (->> ["-webkit" "-moz" "-ie" "-o"]
+       (map #(str % "-" (name k)))
+       (cons (name k))
+       (map #(vector % v))
+       (into {})))
 
 (def meyer-reset ["html, body, div, span, applet, object, iframe, h1,
   h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address,

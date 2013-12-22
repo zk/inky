@@ -3,7 +3,9 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 cd $SCRIPT_DIR/.. && \
-   AWS_ACCESS_ID=fillin \
-   AWS_SECRET_ACCESS_KEY=fillin \
-   AWS_BUCKET=fillin \
+   AWS_ACCESS_ID=FILL_IN \
+   AWS_SECRET_ACCESS_KEY=FILL_IN \
+   AWS_BUCKET=FILL_IN \
+   GA_TRACKING_ID=FILL_IN \
+   GA_TRACKING_HOST=dev.inky.cc \
 lein repl :headless
