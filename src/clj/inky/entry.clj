@@ -371,13 +371,17 @@
             ". "]
            [:span.compile-info
             "Compiled "
-            "with inky v" (or inky-version "DONNO")
-            " from gist "
-            [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]
-            " "
-            (if (< (util/ms-since created) (* 1000 60 60 24))
-              (str  (util/timeago created) " ago")
-              (str "on " (util/format-ms created "MMM dd, yyyy")))
+            "with "
+            [:span.version "inky v" (or inky-version "DONNO")]
+            ", from "
+            [:span.gist-id
+             "gist "
+             [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]]
+            ", "
+            [:span.created
+             (if (< (util/ms-since created) (* 1000 60 60 24))
+               (str  (util/timeago created) " ago")
+               (str "on " (util/format-ms created "MMM dd, yyyy")))]
             "."]]]
          [:section
           [:pre {:class "brush: clojure"}
