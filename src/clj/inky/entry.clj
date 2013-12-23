@@ -25,6 +25,18 @@
             [clojure.java.shell :as sh]
             [clojure.edn :as edn]))
 
+(def current-inky-version
+  (try
+    (let [source (slurp "project.clj")
+          forms (read-string (str "[" source "]"))]
+      (->> forms
+           (filter #(= 'defproject (first %)))
+           first
+           (drop 2)
+           first))
+    (catch java.io.FileNotFoundException e
+      "UNKNOWN")))
+
 (def ga-tag
   [:script (str "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -135,7 +147,7 @@
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
     (-> [:head
-         #_[:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]
+         [:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]
          [:link {:rel :stylesheet :href "/css/app.css"}]]
         (concat head)
         vec)
@@ -198,16 +210,21 @@
   {:headers {"Content-Type" "text/html;utf-8"}
    :body body})
 
-(defn gist-source [gist-id]
-  (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
-       :body
-       util/from-json
-       :files
-       (filter #(or (.endsWith (str (first %)) ".cljs")
-                    (.endsWith (str (first %)) ".clj")))
-       first
-       second
-       :content))
+(defn gist-data [gist-id]
+  (let [resp (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
+                  :body
+                  util/from-json)
+        {:keys [login avatar_url html_url]} (:user resp)]
+    {:source (->> resp
+                  :files
+                  (filter #(or (.endsWith (str (first %)) ".cljs")
+                               (.endsWith (str (first %)) ".clj")))
+                  first
+                  second
+                  :content)
+     :user {:login login
+            :avatar-url avatar_url
+            :html-url html_url}}))
 
 (def cljs-libs
   [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
@@ -252,7 +269,7 @@
       [:section.about
        [:h3 "What?"]
        [:p
-        "Inky.cc is a place to compile and host short snippets of ClojureScript, a la "
+        "Inky.cc is a place to compile and host short snippets of ClojureScript, &#224; la "
         [:a {:href "http://bl.ocks.org"} "blocks"]
         ", "
         [:a {:href "http://jsfiddle.net/"} "jsfiddle"]
@@ -331,6 +348,50 @@
        parse-meta
        :ns))
 
+(defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version]}]
+  (let [sketch-url (str "/" login "/" gist-id "/sketch")
+        user-url (str "https://github.com/" login)]
+    ($layout
+      {:body-class :sketch-page
+       :content
+       [:body
+        [:div.wrapper
+         [:section
+          [:h1 ns]
+          [:p (format-doc doc)]]
+         [:section
+          [:iframe {:src sketch-url}]
+          [:div.controls
+           [:a {:href sketch-url} "full-screen"]]
+          [:div.sketch-meta
+           [:a {:href user-url}
+            [:img.avatar {:src (:avatar-url user)}]]
+           [:span.author "By "
+            [:a {:href user-url} login]
+            ". "]
+           [:span.compile-info
+            "Compiled "
+            "with inky v" (or inky-version "DONNO")
+            " from gist "
+            [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]
+            " "
+            (if (< (util/ms-since created) (* 1000 60 60 24))
+              (str  (util/timeago created) " ago")
+              (str "on " (util/format-ms created "MMM dd, yyyy")))
+            "."]]]
+         [:section
+          [:pre {:class "brush: clojure"}
+           (when source
+             (-> source
+                 (str/replace #">" "&gt;")
+                 (str/replace #"<" "&lt;")))]]
+         [:script {:type "text/javascript"}
+          (str
+            (slurp "syntaxhighlighterclj.js") ";"
+            "SyntaxHighlighter.defaults.toolbar=false;"
+            "SyntaxHighlighter.defaults.gutter=true;"
+            "SyntaxHighlighter.all();")]]]})))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
@@ -342,48 +403,6 @@
                      (html-response
                        (render-dev ns)))))
 
-  (GET "/compile" [] (fn [r]
-                       (let [url (-> r :params :url)
-                             source (slurp url)
-                             hash (md5 source)
-                             dir (str "/tmp/inky/" hash)
-                             source-dir (str "/tmp/inky/" hash)
-                             filename (str source-dir "/code.cljs")]
-                         (cond
-                           (compiling? hash) (render-compiling)
-                           (in-s3? hash) (resp/redirect (str "/s/" hash))
-
-                           :else (do (future
-                                       (time
-                                         (try
-                                           (add-in-progress hash)
-                                           (println "Compiling" hash url dir)
-                                           (when (.exists (java.io.File. dir))
-                                             (sh/sh "rm" "-rf" dir))
-                                           (.mkdirs (java.io.File. dir))
-                                           (spit filename source)
-                                           (compile-cljs hash filename)
-                                           (s3/upload-file
-                                             (str dir "/code.js")
-                                             (str hash "/code.js"))
-                                           (s3/put-string
-                                             (str hash "/meta.edn")
-                                             (pr-str (assoc (parse-meta source)
-                                                       :source source
-                                                       :url url
-                                                       :created (System/currentTimeMillis))))
-                                           (s3/put-string
-                                             (str hash "/code.html")
-                                             (render-compiled hash)
-                                             {:content-type "text/html;charset=utf-8"})
-                                           #_(s3/upload-hash hash (str "/tmp/inky/" hash))
-                                           (println "done compiling" hash)
-                                           (catch Exception e
-                                             (println e)
-                                             (.printStackTrace e))
-                                           (finally (remove-in-progress hash)))))
-                                     (render-compiling))))))
-
   (GET "/:login/:gist-id" [login gist-id]
     (fn [r]
       (let [recompile? (-> r :params :recompile)]
@@ -392,47 +411,16 @@
 
           (and (in-s3? gist-id)
                (not recompile?))
-          (let [sketch-url (str "/s/" gist-id "/sketch")
-                {:keys [ns doc source url created]}
+          (let [{:keys [ns doc source url created] :as sketch-meta}
                 (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
                      edn/read-string)]
-            ($layout
-              {:body-class :sketch-page
-               :content
-               [:body
-                [:div.wrapper
-                 [:section
-                  [:h1 ns]
-                  [:p (format-doc doc)]]
-                 [:section
-                  [:iframe {:src sketch-url}]
-                  [:div.controls
-                   [:a {:href sketch-url} "full-screen"]]]
-                 [:section
-                  [:pre {:class "brush: clojure"}
-                   (when source
-                     (-> source
-                         (str/replace #">" "&gt;")
-                         (str/replace #"<" "&lt;")))]]
-                 [:section.sketch-meta
-                  "Created at "
-                  (or created "donno")
-                  " from "
-                  (if url
-                    [:a {:href url} (squeeze 60 url)]
-                    " we have no idea")
-                  "."]
-                 [:script {:type "text/javascript"}
-                  (str
-                    (slurp "syntaxhighlighterclj.js") ";"
-                    "SyntaxHighlighter.defaults.toolbar=false;"
-                    "SyntaxHighlighter.defaults.gutter=true;"
-                    "SyntaxHighlighter.all();")]]]}))
+            (sketch-page login gist-id sketch-meta))
 
           :else (do
                   (add-in-progress gist-id)
                   (let [url (-> r :params :url)
-                        source (gist-source gist-id)
+                        gist-data (gist-data gist-id)
+                        source (:source gist-data)
                         hash gist-id
                         dir (str "/tmp/inky/" hash)
                         source-dir (str "/tmp/inky/" hash)
@@ -451,10 +439,12 @@
                             (str hash "/code.js"))
                           (s3/put-string
                             (str hash "/meta.edn")
-                            (pr-str (assoc (parse-meta source)
-                                      :source source
-                                      :url url
-                                      :created (System/currentTimeMillis))))
+                            (pr-str
+                              (merge
+                                (parse-meta source)
+                                gist-data
+                                {:created (util/now)
+                                 :inky-version current-inky-version})))
                           (s3/put-string
                             (str hash "/code.html")
                             (render-compiled hash)
@@ -473,7 +463,21 @@
     (fn [r]
       (render-compiled gist-id)))
 
-  (GET "/show-compiling" [] (render-compiling)))
+  (GET "/show-compiling" [] (render-compiling))
+
+  (GET "/test-show-sketch" []
+    (fn [r]
+      (sketch-page
+        "zk"
+        "8048938"
+        {:doc "Let's start with something short. The quick brown fox jumps over the lazy dog."
+         :ns "testing.one.two.three"
+         :created 0
+         :inky-version "0.1.0"
+         :user {:login "zk"
+                :avatar-url "https://2.gravatar.com/avatar/a27a1085b85807e609f0aa63c6e06c04?d=https%3A%2F%2Fidenticons.github.com%2Fb36ed8a07e3cd80ee37138524690eca1.png&r=x&s=440"
+                :html-url ""}
+         :source "(defn foo \"bar\")"}))))
 
 (def routes
   (-> _routes

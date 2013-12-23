@@ -14,6 +14,8 @@ Run `bin/dev`
 
 Heroku
 
+* Don't forget to bump inky's version number any time deps change (including dep version changes).
+
 ## License
 
 Copyright © 2013 Zachary Kim http://zacharykim.com

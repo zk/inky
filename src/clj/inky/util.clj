@@ -3,3 +3,31 @@
 
 (defn from-json [json-str]
   (parse-string json-str true))
+
+(defn now [] (System/currentTimeMillis))
+
+(defn ms-since [ms]
+  (- (now) ms))
+
+(defn timeago [ms]
+  (when ms
+    (let [delta-ms (ms-since ms)
+          s (/ delta-ms 1000)
+          m (/ s 60)
+          h (/ m 60)
+          d (/ h 24)
+          y (/ d 365.0)]
+      (cond
+        (< s 60) "less than a minute"
+        (< m 2) "1 minute"
+        (< h 1) (str (int m) " minutes")
+        (< h 2) "1 hour"
+        (< d 1) (str (int h) " hours")
+        (< d 2) "1 day"
+        (< y 1) (str (int d) " days")
+        (< y 2) "1 year"
+        :else (str (format "%.1f" y) " years")))))
+
+(defn format-ms [ms format]
+  (let [d (java.util.Date. ms)]
+    (.format (java.text.SimpleDateFormat. format) d)))
