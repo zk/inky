@@ -303,7 +303,7 @@
          [:li
           "Visit "
           [:code "http://inky.cc/:gh-login/:gist-id"]
-          ". This will compile the provided ClojureScript text and redirect you to the resulting sketch."]
+          ". This will compile the provided source and redirect you to the resulting sketch."]
          [:li "???"]
          [:li "Profit"]]]
        [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]]}))
