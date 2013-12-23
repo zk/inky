@@ -285,7 +285,7 @@
         [:ol
          [:li
           "Visit "
-          [:code "http://inky.cc/compile?url=url-of-cljs-file"]
+          [:code "http://inky.cc/:gh-login/:gist-id"]
           ". This will compile the provided ClojureScript text and redirect you to the resulting sketch."]
          [:li "???"]
          [:li "Profit"]]]
