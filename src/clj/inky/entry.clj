@@ -179,7 +179,7 @@
                   "80%" {:background-color "#e67e22"}
                   "100%" {:background-color "#3498db"}})
                [:h1 "Compiling!"]
-               [:p "This should only take a few seconds, so sit tight and we'll load the results, automatically, when they're ready."]
+               [:p "This should take less than 30 seconds, so sit tight and we'll load the results, automatically, when they're ready."]
                [:p "Results are cached for subsequent loads."]
                [:div.box.animate]]}))
 
@@ -217,9 +217,31 @@
    ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]])
 
 (def previews
-  [["5ac8ba0ce4cb11c3d518d25357a8b11b"
+  [["almost.haiku"
     "@heyzk"
-    ""]])
+    "zk/8065432"
+    "http://f.inky.cc.s3.amazonaws.com/top-examples/haiku.jpg"]
+   ["tenk.k.processes.redux"
+    "@heyzk"
+    "/zk/7981870"
+    "http://f.inky.cc.s3.amazonaws.com/top-examples/tenkredux.jpg"]
+   ["instagram.api"
+    "@heyzk"
+    "/zk/8048938"
+    "http://f.inky.cc.s3.amazonaws.com/top-examples/instagram.jpg"]
+   ["first"
+    "@heyzk"
+    "/zk/7981902"
+    "http://f.inky.cc.s3.amazonaws.com/top-examples/first.jpg"]])
+
+(defn $sketch-preview [[name author-twitter inky-path image-url]]
+  [:li.sketch-preview
+   [:div.sketch-meta
+    [:strong name]
+    " by "
+    [:a {:href (str "https://twitter.com/" author-twitter)} author-twitter]]
+   [:a {:href inky-path}
+    [:img {:src image-url}]]])
 
 (defn $intro []
   ($layout
@@ -242,7 +264,7 @@
         "We've included several cljs libraries for you to use, including "
         (->> cljs-libs
              (map (fn [[name version href]]
-                    [:span [:a {:href href} name] " (" version ")"]))
+                    [:code [:a {:href href} name] " (" version ")"]))
              (interpose ", ")
              reverse
              ((fn [[x & rest]]
@@ -256,35 +278,7 @@
       [:section.sketch-examples
        [:h3 "Recent Sketches"]
        [:ul
-        [:li.sketch-preview
-         [:div.sketch-meta
-          [:strong "first"]
-          " by "
-          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/2ebb898065c9897f8cc0a8bbbeeeb849"}
-          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/first.jpg"}]]]
-        [:li.sketch-preview
-         [:div.sketch-meta
-          [:strong "ten.k.processes.redux"]
-          " by "
-          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/89fc931cd9cee41db28ebfa8cfcc526b"}
-          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/tenkredux.jpg"}]]]
-        [:li.sketch-preview
-         [:div.sketch-meta
-          [:strong "instagram.api"]
-          " by "
-          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/98dba5001b5eb7017de1795c51aebf09"}
-          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/instagram.jpg"}]]]
-        [:li.sketch-preview
-         [:div.sketch-meta
-          [:strong "haiku"]
-          " by "
-          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]
-         [:a {:href "/s/a26d252df6ff92759533ca8e51ad3042"}
-          [:img {:src "http://f.inky.cc.s3.amazonaws.com/top-examples/haiku.jpg"}]]]
-        ]]
+        (map $sketch-preview previews)]]
       [:section.instructions
        [:h3 "How-To"]
        [:div.instructions-list
@@ -395,8 +389,46 @@
       (let [recompile? (-> r :params :recompile)]
         (cond
           (compiling? gist-id) (render-compiling)
+
           (and (in-s3? gist-id)
-               (not recompile?)) (render-compiled gist-id)
+               (not recompile?))
+          (let [sketch-url (str "/s/" gist-id "/sketch")
+                {:keys [ns doc source url created]}
+                (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
+                     edn/read-string)]
+            ($layout
+              {:body-class :sketch-page
+               :content
+               [:body
+                [:div.wrapper
+                 [:section
+                  [:h1 ns]
+                  [:p (format-doc doc)]]
+                 [:section
+                  [:iframe {:src sketch-url}]
+                  [:div.controls
+                   [:a {:href sketch-url} "full-screen"]]]
+                 [:section
+                  [:pre {:class "brush: clojure"}
+                   (when source
+                     (-> source
+                         (str/replace #">" "&gt;")
+                         (str/replace #"<" "&lt;")))]]
+                 [:section.sketch-meta
+                  "Created at "
+                  (or created "donno")
+                  " from "
+                  (if url
+                    [:a {:href url} (squeeze 60 url)]
+                    " we have no idea")
+                  "."]
+                 [:script {:type "text/javascript"}
+                  (str
+                    (slurp "syntaxhighlighterclj.js") ";"
+                    "SyntaxHighlighter.defaults.toolbar=false;"
+                    "SyntaxHighlighter.defaults.gutter=true;"
+                    "SyntaxHighlighter.all();")]]]}))
+
           :else (do
                   (add-in-progress gist-id)
                   (let [url (-> r :params :url)
