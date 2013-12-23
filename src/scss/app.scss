@@ -146,6 +146,15 @@ ol li {
     overflow: auto;
   }
 
+  .sketch-meta {
+    font-size: 14px;
+    color: #999;
+
+    a {
+      color: #999;
+    }
+  }
+
   section {
     margin-bottom: 30px;
   }
@@ -184,6 +193,12 @@ ol li {
     }
   }
 
+  .sketch-meta {
+    strong {
+      font-weight: 500;
+    }
+  }
+
   .instructions-list {
     padding: 20px;
     background-color: #f8f8f8;
@@ -200,11 +215,4 @@ ol li {
     padding: 20px;
     background-color: rgba(0,0,0,0.02);
   }
-}
-
-.sketch-meta {
-  font-size: 14px;
-  color: #999;
-
-  a { color: #999; }
 }
