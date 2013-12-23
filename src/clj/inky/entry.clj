@@ -308,11 +308,6 @@
          [:li "Profit"]]]
        [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]]}))
 
-
-
-(defn source-by-id [id]
-  (gist-source id))
-
 (defn squeeze
   "Ellipses the middle of a long string."
   [n s]
