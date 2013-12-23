@@ -38,13 +38,6 @@
                                 :optimizations :none
                                 :source-map true}}
 
-               :preview {:source-paths ["src/preview"]
-                         :compiler {:output-to "resources/public/preview/preview.js"
-                                    :output-dir "resources/public/preview"
-                                    :optimizations :none
-                                    :source-map true
-                                    :libs [""]}}
-
                :gists {:source-paths ["src/gists"]
                        :compiler {:output-to "resources/public/gists/gists.js"
                                   :output-dir "resources/public/gists"
