@@ -185,6 +185,7 @@
 (def cljs-libs
   [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
    ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
+   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
    ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
    ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
    ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]])
