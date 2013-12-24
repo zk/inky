@@ -8,4 +8,6 @@ cd $SCRIPT_DIR/.. && \
    AWS_BUCKET=FILL_IN \
    GA_TRACKING_ID=FILL_IN \
    GA_TRACKING_HOST=dev.inky.cc \
+   MONGO_URL=mongodb://fillin \
+   GH_USER_TOKEN=FILL_IN \
 lein repl :headless
