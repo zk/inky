@@ -200,9 +200,25 @@ ol li {
   }
 
   .instructions-list {
-    padding: 20px;
+    padding: 10px;
     background-color: #f8f8f8;
     margin-bottom: 20px;
+    font-size: 16px;
+
+    ol {
+      padding: 0;
+      padding-left: 30px;
+    }
+
+    code {
+      white-space: wrap;
+    }
+
+    li {
+      @media (max-width: 600px) {
+        font-size: 14px;
+      }
+    }
   }
 
   ol {

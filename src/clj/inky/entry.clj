@@ -302,7 +302,7 @@
         [:ol
          [:li
           "Visit "
-          [:code "http://inky.cc/:gh-login/:gist-id"]
+          [:code "inky.cc/:gh-login/:gist-id"]
           ". This will compile the provided source and redirect you to the resulting sketch."]
          [:li "???"]
          [:li "Profit"]]]
@@ -368,7 +368,7 @@
             "Compiled "
             "with "
             [:span.version "inky v" (or inky-version "DONNO")]
-            ", from "
+            " from "
             [:span.gist-id
              "gist "
              [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]]
