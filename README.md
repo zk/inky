@@ -25,6 +25,8 @@ name it after the last part of the ns. For example, if the ns if your
 sketch is `foo.bar.baz`, name the file `baz.cljs` (in the root
 directory of the gist).
 
+Starter gist to fork: https://gist.github.com/zk/8108564
+
 
 ## Config
 
