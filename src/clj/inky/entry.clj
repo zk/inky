@@ -10,11 +10,8 @@
          reload]
         [ring.middleware.session.cookie :only (cookie-store)]
         [ring.util.response :only (response content-type redirect)])
-  (:require [ring.adapter.jetty :as jetty]
-            [ring.util.response :as resp]
-            [aleph.http :as ah]
+  (:require [aleph.http :as ah]
             [inky.env :as env]
-            [inky.entry :as entry]
             [compojure.core :refer (defroutes GET)]
             [hiccup.page :as hp]
             [clojure.string :as str]
