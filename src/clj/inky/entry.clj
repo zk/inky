@@ -166,25 +166,20 @@
 (defn compiling? [hash]
   (get @in-progress hash))
 
-(defn html-response [body]
-  {:headers {"Content-Type" "text/html; utf-8"}
-   :body body})
+(defn html-response [body & [opts]]
+  (merge
+    opts
+    {:headers {"Content-Type" "text/html; utf-8"}
+     :body body}))
 
 (defn gist-data [gist-id]
-  (let [resp (try+
-               (assoc (hcl/get (str "https://api.github.com/gists/" gist-id))
-                 :success true)
-               (catch [:status 403] _
-                 ;; rate limit error
-                 (println "Rate limit hit fetching gist id:" gist-id)
-                 {:success false}))]
-    (if-not (:success resp)
-      resp
+  (try+
+    (let [resp (hcl/get (str "https://api.github.com/gists/" gist-id))]
       (let [body (->> resp
                       :body
                       util/from-json)
-            {:keys [login avatar_url html_url]} (:user resp)]
-        {:source (->> resp
+            {:keys [login avatar_url html_url]} (:user body)]
+        {:source (->> body
                       :files
                       (filter #(or (.endsWith (str (first %)) ".cljs")
                                    (.endsWith (str (first %)) ".clj")))
@@ -194,8 +189,11 @@
          :user {:login login
                 :avatar-url avatar_url
                 :html-url html_url}
-         :success true}))))
-
+         :success true}))
+    (catch [:status 403] _
+      ;; rate limit error
+      (println "Rate limit hit fetching gist id:" gist-id)
+      {:success false})))
 
 (def cljs-libs
   [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
@@ -402,7 +400,8 @@
                           (html-response
                             (render-error
                               [:h2 "GitHub Rate Limit Hit"]
-                              [:p "Whoops, looks like we hit the rate limit. GitHub allows us to call their API a limited number of times per hour. Please try again next hour."])))
+                              [:p "Whoops, looks like we hit the rate limit. GitHub allows us to call their API a limited number of times per hour. Please try again next hour."])
+                            {:status 503}))
                         (let [source (:source gist-data)
                               hash gist-id
                               dir (str "/tmp/inky/" hash)
