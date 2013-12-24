@@ -14,7 +14,7 @@ Env vars:
 * `PORT` -- web port to bind to
 * `AWS_ACCESS_ID` -- s3 creds
 * `AWS_SECRET_ACCESS_KEY`
-* `AWS_BUCKET` -- bucket to store compiled code
+* `AWS_S3_BUCKET` -- s3 bucket to store compiled code
 * `GA_TRACKING_ID` -- Google Analytics
 * `GA_TRACKING_HOST` -- ex. 'inky.cc'
 

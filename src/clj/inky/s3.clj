@@ -7,7 +7,7 @@
 
 (def access-id (env/str :aws-access-id))
 (def secret-key (env/str :aws-secret-access-key))
-(def bucket (env/str :aws-bucket))
+(def bucket (env/str :aws-s3-bucket))
 
 (defn client []
   (AmazonS3Client. (BasicAWSCredentials. access-id secret-key)))
