@@ -23,6 +23,7 @@
             [clojure.edn :as edn]
             [somnium.congomongo :as mon]
             [slingshot.slingshot :refer (try+)]))
+
 (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
 
 (def current-inky-version
