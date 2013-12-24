@@ -294,7 +294,13 @@
          [:section
           [:h1 ns]
           [:p (format-doc doc)]]
-         (if (:success compile-res)
+         (if-not (:success compile-res)
+           [:section.compile-failed
+            [:h2 "Ruh-Roh, compile failed:"]
+            [:p "Rerun compilation by setting query param" [:code "recompile=true"] " on this page."]
+            [:pre
+             "# Compilation result:\n\n"
+             (util/pp-str compile-res)]]
            [:section
             [:iframe {:src sketch-url}]
             [:div.controls
@@ -318,14 +324,7 @@
                (if (< (util/ms-since created) (* 1000 60 60 24))
                  (str  (util/timeago created) " ago")
                  (str "on " (util/format-ms created "MMM dd, yyyy")))]
-              "."]]]
-           [:section.compile-failed
-            [:h2 "Ruh-Roh, compile failed:"]
-            [:p "Rerun compilation by setting query param" [:code "recompile=true"] " on this page."]
-            [:pre
-             "# Compilation result:\n\n"
-             (util/pp-str compile-res)]
-            ])
+              "."]]])
          [:section
           [:pre {:class "brush: clojure"}
            (when source
@@ -354,7 +353,9 @@
     (fn [r]
       (let [recompile? (-> r :params :recompile)]
         (cond
-          (compiling? gist-id) (render-compiling)
+          (compiling? gist-id) (if recompile?
+                                 (redirect (str "/" login "/" gist-id))
+                                 (render-compiling))
 
           (and (in-s3? gist-id)
                (not recompile?))
