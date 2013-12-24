@@ -248,7 +248,9 @@
        [:p
         "Drop me a line at "
         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
-        " if you'd like your library to be available to inky sketches."]]
+        " if you'd like your library to be available to inky sketches, or open a pull request at "
+        [:a {:href "https://github.com/zk/inky"} "zk/inky"]
+        "."]]
       [:section.sketch-examples
        [:h3 "Recent Sketches"]
        [:ul
@@ -287,6 +289,7 @@
 
 (defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version compile-res]}]
   (let [sketch-url (str "/" login "/" gist-id "/sketch")
+        gist-url (str "https://gist.github.com/" login "/" gist-id)
         user-url (str "https://github.com/" login)]
     ($layout
       {:body-class :sketch-page
@@ -306,6 +309,8 @@
            [:section
             [:iframe {:src sketch-url}]
             [:div.controls
+             [:a {:href gist-url} "fork this sketch"]
+             " / "
              [:a {:href sketch-url} "full-screen"]]
             [:div.sketch-meta
              [:a {:href user-url}
@@ -320,7 +325,7 @@
               " from "
               [:span.gist-id
                "gist "
-               [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]]
+               [:a {:href gist-url} gist-id]]
               ", "
               [:span.created
                (if (< (util/ms-since created) (* 1000 60 60 24))
