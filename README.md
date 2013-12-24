@@ -2,7 +2,7 @@
 
 A ClojureScript sketchbook.
 
-[![Build Status](https://travis-ci.org/zkim/nsfw.png)](https://travis-ci.org/zkim/inky)
+[![Build Status](https://travis-ci.org/zkim/nsfw.png)](https://travis-ci.org/zk/inky)
 
 ![](http://f.cl.ly/items/3N443a2i1m0j21053A3N/Screen%20Shot%202013-12-23%20at%203.45.41%20PM.png)
 
