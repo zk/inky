@@ -4,5 +4,5 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 set -e
 
-lein compile
+lein compile :all
 lein test
