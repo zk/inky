@@ -10,6 +10,10 @@ if [ "$TRAVIS" ]; then
    LEIN_CMD=lein2
 fi
 
+pushd $SCRIPT_DIR/.. > /dev/null
+
 $LEIN_CMD clean
 $LEIN_CMD compile :all
 $LEIN_CMD test
+
+popd > /dev/null
