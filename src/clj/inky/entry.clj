@@ -45,51 +45,6 @@
   ga('create', '" (env/str :ga-tracking-id) "', '" (env/str :ga-tracking-host) "');
   ga('send', 'pageview');")])
 
-(defn md5
-  "Compute the hex MD5 sum of a string."
-  [#^String str]
-  (when str
-    (let [alg (doto (java.security.MessageDigest/getInstance "MD5")
-                (.reset)
-                (.update (.getBytes str)))]
-      (try
-        (.toString (new BigInteger 1 (.digest alg)) 16)
-        (catch java.security.NoSuchAlgorithmException e
-          (throw (new RuntimeException e)))))))
-
-(declare compile-rule)
-
-(defn compile-transform [[prop val]]
-  (if (map? val)
-    (compile-rule [prop val])
-    (str
-      (name prop)
-      ":"
-      (cond
-        (string? val) val
-        (coll? val) (->> val
-                         (map name)
-                         (interpose ",")
-                         (apply str))
-        (keyword val) (name val)
-        :else val)
-      ";")))
-
-(defn compile-rule [[sel transform]]
-  (str (name sel)
-       "{"
-       (->> transform
-            (map compile-transform)
-            (apply str))
-       "}"))
-
-(defn style-el [& rules]
-  [:style {:type "text/css"}
-   (->> (partition 2 rules)
-        (map compile-rule)
-        (interpose " ")
-        (apply str))])
-
 (def link-re #"(([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?")
 
 (defn format-doc [s]
@@ -178,19 +133,8 @@
 (defn render-compiling []
   ($layout
     {:head [[:meta {:http-equiv "refresh" :content "6"}]]
+     :body-class "compiling-page"
      :content [:div
-               (style-el
-                 :.animate {:-webkit-animation-name "bgcolor"
-                            :-webkit-animation-duration "6s"
-                            :-webkit-animation-iteration-count "infinite"}
-                 :.box {:height "230px"}
-                 "@-webkit-keyframes bgcolor"
-                 {"0%" {:background-color "#3498db"}
-                  "20%" {:background-color "#2ecc71"}
-                  "40%" {:background-color "#f1c40f"}
-                  "60%" {:background-color "#8e44ad"}
-                  "80%" {:background-color "#e67e22"}
-                  "100%" {:background-color "#3498db"}})
                [:h1 "Compiling!"]
                [:p "This should take less than 30 seconds, so sit tight and we'll load the results, automatically, when they're ready."]
                [:p "Results are cached for subsequent loads."]

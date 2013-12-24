@@ -31,3 +31,15 @@
 (defn format-ms [ms format]
   (let [d (java.util.Date. ms)]
     (.format (java.text.SimpleDateFormat. format) d)))
+
+(defn md5
+  "Compute the hex MD5 sum of a string."
+  [#^String str]
+  (when str
+    (let [alg (doto (java.security.MessageDigest/getInstance "MD5")
+                (.reset)
+                (.update (.getBytes str)))]
+      (try
+        (.toString (new BigInteger 1 (.digest alg)) 16)
+        (catch java.security.NoSuchAlgorithmException e
+          (throw (new RuntimeException e)))))))

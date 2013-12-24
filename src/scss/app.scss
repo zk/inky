@@ -234,3 +234,54 @@ ol li {
     background-color: rgba(0,0,0,0.02);
   }
 }
+
+@keyframes bgcolor {
+  0% {
+    background-color: #3498db;
+  }
+  20% {
+    background-color: #2ecc71;
+  }
+  40% {
+    background-color: #f1c40f;
+  }
+  60% {
+    background-color: #8e44ad;
+  }
+  80% {
+    background-color: #e67e22;
+  }
+  100% {
+    background-color: #3498db;
+  }
+}
+
+@-webkit-keyframes bgcolor {
+  0% {
+    background-color: #3498db;
+  }
+  20% {
+    background-color: #2ecc71;
+  }
+  40% {
+    background-color: #f1c40f;
+  }
+  60% {
+    background-color: #8e44ad;
+  }
+  80% {
+    background-color: #e67e22;
+  }
+  100% {
+    background-color: #3498db;
+  }
+}
+
+.compiling-page {
+  .box {
+    height: 230px;
+  }
+  .animate {
+    -webkit-animation: bgcolor infinite 6s;
+  }
+}
