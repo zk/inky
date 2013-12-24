@@ -47,14 +47,27 @@
 
 (def link-re #"(([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?")
 
+(defn safe-slurp [s]
+  (when s
+    (try
+      (slurp s)
+      (catch java.io.FileNotFoundException e nil))))
+
+(defn guess-gist-ns [root-path]
+  (->> (file-seq (java.io.File. root-path))
+       (map #(.getAbsolutePath %))
+       (filter #(.endsWith % ".cljs"))
+       first
+       safe-slurp
+       parse-meta
+       :ns))
+
 (defn format-doc [s]
   (when s
     (-> s
         (str/replace link-re (fn [[href & rest]]
                                (str "<a href=\"" href "\">" href "</a>")))
         (str/replace #"\n\n" "<br /><br />"))))
-
-(def compile-cljs comp/compile-cljs)
 
 (defn parse-meta [source]
   (let [forms (read-string (str "[" source "]"))
@@ -102,7 +115,9 @@
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
     (-> [:head
-         [:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]]
+         [:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]
+         [:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]
+         [:link {:rel :stylesheet :href "/css/app.css"}]]
         (concat head)
         vec)
     [:body
@@ -125,10 +140,7 @@
        [:div.row
         [:div.col-sm-121
          "inky.cc is brought to you by "
-         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]
-     [:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]
-     [:link {:rel :stylesheet :href "/css/app.css"}]
-     ga-tag]))
+         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]ga-tag]))
 
 (defn render-compiling []
   ($layout
@@ -152,7 +164,7 @@
   (get @in-progress hash))
 
 (defn html-response [body]
-  {:headers {"Content-Type" "text/html;utf-8"}
+  {:headers {"Content-Type" "text/html; utf-8"}
    :body body})
 
 (defn gist-data [gist-id]
@@ -272,21 +284,6 @@
                         (drop half-take-out)
                         (apply str)))))))
 
-(defn safe-slurp [s]
-  (when s
-    (try
-      (slurp s)
-      (catch java.io.FileNotFoundException e nil))))
-
-(defn guess-gist-ns [root-path]
-  (->> (file-seq (java.io.File. root-path))
-       (map #(.getAbsolutePath %))
-       (filter #(.endsWith % ".cljs"))
-       first
-       safe-slurp
-       parse-meta
-       :ns))
-
 (defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version]}]
   (let [sketch-url (str "/" login "/" gist-id "/sketch")
         user-url (str "https://github.com/" login)]
@@ -376,7 +373,7 @@
                             (sh/sh "rm" "-rf" dir))
                           (.mkdirs (java.io.File. dir))
                           (spit filename source)
-                          (compile-cljs hash filename)
+                          (comp/compile-cljs hash filename)
                           (s3/upload-file
                             (str dir "/code.js")
                             (str hash "/code.js"))
