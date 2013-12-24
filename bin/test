@@ -1,4 +1,6 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -7,8 +9,6 @@ LEIN_CMD=lein
 if [ "$TRAVIS" ]; then
    LEIN_CMD=lein2
 fi
-
-set -e
 
 $LEIN_CMD clean
 $LEIN_CMD compile :all
