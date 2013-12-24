@@ -5,9 +5,9 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $SCRIPT_DIR/.. && \
    AWS_ACCESS_ID=FILL_IN \
    AWS_SECRET_ACCESS_KEY=FILL_IN \
-   AWS_BUCKET=FILL_IN \
+   AWS_S3_BUCKET=FILL_IN \
    GA_TRACKING_ID=FILL_IN \
    GA_TRACKING_HOST=dev.inky.cc \
-   MONGO_URL=mongodb://fillin \
+   MONGO_URL=mongodb://localhost:27017 \
    GH_USER_TOKEN=FILL_IN \
-lein repl :headless
+   foreman start -f Procfile.dev
