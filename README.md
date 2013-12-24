@@ -16,6 +16,11 @@ Heroku
 
 * Don't forget to bump inky's version number any time deps change (including dep version changes).
 
+## TODO
+
+* A bunch of stuff tracking compiles is in mem, prevents scale-out.
+* Report compilation progress / errors on compile page
+
 ## License
 
 Copyright © 2013 Zachary Kim http://zacharykim.com
