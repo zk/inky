@@ -1,5 +1,6 @@
 (ns inky.util
-  (:require [cheshire.core :refer (parse-string)]))
+  (:require [cheshire.core :refer (parse-string)]
+            [clojure.pprint :refer (pprint)]))
 
 (defn from-json [json-str]
   (parse-string json-str true))
@@ -43,3 +44,8 @@
         (.toString (new BigInteger 1 (.digest alg)) 16)
         (catch java.security.NoSuchAlgorithmException e
           (throw (new RuntimeException e)))))))
+
+(defn pp-str [o]
+  (let [w (java.io.StringWriter.)]
+    (pprint o w)
+    (.toString w)))

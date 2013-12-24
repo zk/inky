@@ -51,16 +51,18 @@
       (catch java.io.FileNotFoundException e nil))))
 
 (defn parse-meta [source]
-  (let [forms (read-string (str "[" source "]"))
-        ns (->> forms
-                (filter #(and (coll? %) (= 'ns (first %))))
-                first)
-        doc (and (coll? ns)
-                 (> (count ns) 2)
-                 (string? (nth ns 2))
-                 (nth ns 2))]
-    {:ns (second ns)
-     :doc doc}))
+  (try
+    (let [forms (read-string (str "[" source "]"))
+          ns (->> forms
+                  (filter #(and (coll? %) (= 'ns (first %))))
+                  first)
+          doc (and (coll? ns)
+                   (> (count ns) 2)
+                   (string? (nth ns 2))
+                   (nth ns 2))]
+      {:ns (second ns)
+       :doc doc})
+    (catch Exception e {})))
 
 (defn guess-gist-ns [root-path]
   (->> (file-seq (java.io.File. root-path))
@@ -281,7 +283,7 @@
                         (drop half-take-out)
                         (apply str)))))))
 
-(defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version]}]
+(defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version compile-res]}]
   (let [sketch-url (str "/" login "/" gist-id "/sketch")
         user-url (str "https://github.com/" login)]
     ($layout
@@ -292,30 +294,38 @@
          [:section
           [:h1 ns]
           [:p (format-doc doc)]]
-         [:section
-          [:iframe {:src sketch-url}]
-          [:div.controls
-           [:a {:href sketch-url} "full-screen"]]
-          [:div.sketch-meta
-           [:a {:href user-url}
-            [:img.avatar {:src (:avatar-url user)}]]
-           [:span.author "By "
-            [:a {:href user-url} login]
-            ". "]
-           [:span.compile-info
-            "Compiled "
-            "with "
-            [:span.version "inky v" (or inky-version "DONNO")]
-            " from "
-            [:span.gist-id
-             "gist "
-             [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]]
-            ", "
-            [:span.created
-             (if (< (util/ms-since created) (* 1000 60 60 24))
-               (str  (util/timeago created) " ago")
-               (str "on " (util/format-ms created "MMM dd, yyyy")))]
-            "."]]]
+         (if (:success compile-res)
+           [:section
+            [:iframe {:src sketch-url}]
+            [:div.controls
+             [:a {:href sketch-url} "full-screen"]]
+            [:div.sketch-meta
+             [:a {:href user-url}
+              [:img.avatar {:src (:avatar-url user)}]]
+             [:span.author "By "
+              [:a {:href user-url} login]
+              ". "]
+             [:span.compile-info
+              "Compiled "
+              "with "
+              [:span.version "inky v" (or inky-version "DONNO")]
+              " from "
+              [:span.gist-id
+               "gist "
+               [:a {:href (str "https://gist.github.com/" gist-id)} gist-id]]
+              ", "
+              [:span.created
+               (if (< (util/ms-since created) (* 1000 60 60 24))
+                 (str  (util/timeago created) " ago")
+                 (str "on " (util/format-ms created "MMM dd, yyyy")))]
+              "."]]]
+           [:section.compile-failed
+            [:h2 "Ruh-Roh, compile failed:"]
+            [:p "Rerun compilation by setting query param" [:code "recompile=true"] " on this page."]
+            [:pre
+             "# Compilation result:\n\n"
+             (util/pp-str compile-res)]
+            ])
          [:section
           [:pre {:class "brush: clojure"}
            (when source
@@ -370,22 +380,24 @@
                             (sh/sh "rm" "-rf" dir))
                           (.mkdirs (java.io.File. dir))
                           (spit filename source)
-                          (comp/compile-cljs hash filename)
-                          (s3/upload-file
-                            (str dir "/code.js")
-                            (str hash "/code.js"))
-                          (s3/put-string
-                            (str hash "/meta.edn")
-                            (pr-str
-                              (merge
-                                (parse-meta source)
-                                gist-data
-                                {:created (util/now)
-                                 :inky-version current-inky-version})))
-                          (s3/put-string
-                            (str hash "/code.html")
-                            (render-compiled hash)
-                            {:content-type "text/html;charset=utf-8"})
+                          (let [compile-res (comp/compile-cljs hash filename)]
+                            (println compile-res)
+                            (s3/put-string
+                              (str hash "/meta.edn")
+                              (pr-str
+                                (merge
+                                  (parse-meta source)
+                                  {:compile-res compile-res}
+                                  gist-data
+                                  {:created (util/now)
+                                   :inky-version current-inky-version})))
+                            (s3/upload-file
+                              (str dir "/code.js")
+                              (str hash "/code.js"))
+                            (s3/put-string
+                              (str hash "/code.html")
+                              (render-compiled hash)
+                              {:content-type "text/html;charset=utf-8"}))
                           #_(s3/upload-hash hash (str "/tmp/inky/" hash))
                           (println "done compiling" hash)
                           (catch Exception e
