@@ -182,6 +182,11 @@ ol li {
     float: right;
     font-size: 14px;
   }
+
+  .compile-failed {
+    padding: 20px;
+    background-color: #faa;
+  }
 }
 
 .intro-page {

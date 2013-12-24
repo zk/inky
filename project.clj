@@ -28,7 +28,9 @@
                  [com.cemerick/double-check "0.5.4-SNAPSHOT"]
                  [com.keminglabs/c2 "0.2.3"]
                  [org.clojure/core.logic "0.8.5"]
-                 [tailrecursion/cljson "1.0.6"]]
+                 [tailrecursion/cljson "1.0.6"]
+                 [congomongo "0.4.1"]
+                 [slingshot "0.10.3"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
                            (inky.entry/-main))}

@@ -20,7 +20,11 @@
             [inky.s3 :as s3]
             [inky.util :as util]
             [clojure.java.shell :as sh]
-            [clojure.edn :as edn]))
+            [clojure.edn :as edn]
+            [somnium.congomongo :as mon]
+            [slingshot.slingshot :refer (try+)]))
+
+(mon/set-connection! (mon/make-connection (env/str :mongo-url)))
 
 (def current-inky-version
   (try
@@ -167,20 +171,31 @@
    :body body})
 
 (defn gist-data [gist-id]
-  (let [resp (->> (hcl/get (str "https://api.github.com/gists/" gist-id))
-                  :body
-                  util/from-json)
-        {:keys [login avatar_url html_url]} (:user resp)]
-    {:source (->> resp
-                  :files
-                  (filter #(or (.endsWith (str (first %)) ".cljs")
-                               (.endsWith (str (first %)) ".clj")))
-                  first
-                  second
-                  :content)
-     :user {:login login
-            :avatar-url avatar_url
-            :html-url html_url}}))
+  (let [resp (try+
+               (assoc (hcl/get (str "https://api.github.com/gists/" gist-id))
+                 :success true)
+               (catch [:status 403] _
+                 ;; rate limit error
+                 (println "Rate limit hit fetching gist id:" gist-id)
+                 {:success false}))]
+    (if-not (:success resp)
+      resp
+      (let [body (->> resp
+                      :body
+                      util/from-json)
+            {:keys [login avatar_url html_url]} (:user resp)]
+        {:source (->> resp
+                      :files
+                      (filter #(or (.endsWith (str (first %)) ".cljs")
+                                   (.endsWith (str (first %)) ".clj")))
+                      first
+                      second
+                      :content)
+         :user {:login login
+                :avatar-url avatar_url
+                :html-url html_url}
+         :success true}))))
+
 
 (def cljs-libs
   [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
@@ -345,6 +360,10 @@
             "SyntaxHighlighter.defaults.gutter=true;"
             "SyntaxHighlighter.all();")]]]})))
 
+(defn render-error [& body]
+  ($layout
+    {:content body}))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
@@ -372,49 +391,56 @@
             (sketch-page login gist-id sketch-meta))
 
           :else (do
-                  (add-in-progress gist-id)
-                  (let [url (-> r :params :url)
-                        gist-data (gist-data gist-id)
-                        source (:source gist-data)
-                        hash gist-id
-                        dir (str "/tmp/inky/" hash)
-                        source-dir (str "/tmp/inky/" hash)
-                        filename (str source-dir "/code.cljs")]
-                    (future
-                      (time
-                        (try
-                          (println "Compiling" hash url dir)
-                          (when (.exists (java.io.File. dir))
-                            (sh/sh "rm" "-rf" dir))
-                          (.mkdirs (java.io.File. dir))
-                          (spit filename source)
-                          (let [compile-res (comp/compile-cljs hash filename)]
-                            (println compile-res)
-                            (s3/put-string
-                              (str hash "/meta.edn")
-                              (pr-str
-                                (merge
-                                  (parse-meta source)
-                                  {:compile-res compile-res}
-                                  gist-data
-                                  {:created (util/now)
-                                   :inky-version current-inky-version})))
-                            (s3/upload-file
-                              (str dir "/code.js")
-                              (str hash "/code.js"))
-                            (s3/put-string
-                              (str hash "/code.html")
-                              (render-compiled hash)
-                              {:content-type "text/html;charset=utf-8"}))
-                          #_(s3/upload-hash hash (str "/tmp/inky/" hash))
-                          (println "done compiling" hash)
-                          (catch Exception e
-                            (println e)
-                            (.printStackTrace e))
-                          (finally (remove-in-progress hash)))))
-                    (if recompile?
-                      (redirect (str "/" login "/" gist-id))
-                      (render-compiling))))))))
+                  (try
+                    (add-in-progress gist-id)
+                    (let [url (-> r :params :url)
+                          gist-data (gist-data gist-id)]
+                      (if-not (:success gist-data)
+                        (do
+                          (remove-in-progress gist-id)
+                          (html-response
+                            (render-error
+                              [:h2 "GitHub Rate Limit Hit"]
+                              [:p "Whoops, looks like we hit the rate limit. GitHub allows us to call their API a limited number of times per hour. Please try again next hour."])))
+                        (let [source (:source gist-data)
+                              hash gist-id
+                              dir (str "/tmp/inky/" hash)
+                              source-dir (str "/tmp/inky/" hash)
+                              filename (str source-dir "/code.cljs")]
+                          (future
+                            (time
+                              (try
+                                (println "Compiling" hash url dir)
+                                (when (.exists (java.io.File. dir))
+                                  (sh/sh "rm" "-rf" dir))
+                                (.mkdirs (java.io.File. dir))
+                                (spit filename source)
+                                (let [compile-res (comp/compile-cljs hash filename)]
+                                  (println compile-res)
+                                  (s3/put-string
+                                    (str hash "/meta.edn")
+                                    (pr-str
+                                      (merge
+                                        (parse-meta source)
+                                        {:compile-res compile-res}
+                                        gist-data
+                                        {:created (util/now)
+                                         :inky-version current-inky-version})))
+                                  (s3/upload-file
+                                    (str dir "/code.js")
+                                    (str hash "/code.js"))
+                                  (s3/put-string
+                                    (str hash "/code.html")
+                                    (render-compiled hash)
+                                    {:content-type "text/html;charset=utf-8"}))
+                                (println "done compiling" hash)
+                                (catch Exception e
+                                  (println e)
+                                  (.printStackTrace e)))))
+                          (if recompile?
+                            (redirect (str "/" login "/" gist-id))
+                            (render-compiling)))))
+                    (finally (remove-in-progress hash))))))))
 
   (GET "/:login/:gist-id/sketch" [login gist-id]
     (fn [r]
