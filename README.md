@@ -32,7 +32,7 @@ Starter gist to fork: https://gist.github.com/zk/8108564
 
 ## Prereqs
 
-* Foreman
+* https://github.com/ddollar/foreman
 
 
 ## Config
