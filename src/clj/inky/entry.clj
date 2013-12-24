@@ -23,8 +23,7 @@
             [clojure.edn :as edn]
             [somnium.congomongo :as mon]
             [slingshot.slingshot :refer (try+)]))
-
-(mon/set-connection! (mon/make-connection (env/str :mongo-url)))
+(mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
 
 (def current-inky-version
   (try
@@ -375,6 +374,7 @@
                      (html-response
                        (render-dev ns)))))
 
+  ;; (?!)
   (GET "/:login/:gist-id" [login gist-id]
     (fn [r]
       (let [recompile? (-> r :params :recompile)]
