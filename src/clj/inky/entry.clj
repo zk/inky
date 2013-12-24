@@ -147,8 +147,7 @@
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
     (-> [:head
-         [:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]
-         [:link {:rel :stylesheet :href "/css/app.css"}]]
+         [:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]]
         (concat head)
         vec)
     [:body
@@ -172,6 +171,8 @@
         [:div.col-sm-121
          "inky.cc is brought to you by "
          [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]
+     [:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]
+     [:link {:rel :stylesheet :href "/css/app.css"}]
      ga-tag]))
 
 (defn render-compiling []
@@ -262,8 +263,7 @@
 
 (defn $intro []
   ($layout
-    {:head [[:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]]
-     :body-class :intro-page
+    {:body-class :intro-page
      :content
      [:div
       [:section.about
