@@ -6,6 +6,19 @@ A ClojureScript sketchbook.
 
 ![](http://f.cl.ly/items/3N443a2i1m0j21053A3N/Screen%20Shot%202013-12-23%20at%203.45.41%20PM.png)
 
+## Working on Sketches Locally
+
+Inky has a dev mode to work on sketches locally. Why? Sub-second
+recompiles and source maps.
+
+This works by cloning a gist into the `src/gists` directory, and visiting `localhost:5000/dev?ns=<ns>`. Specifics below:
+
+1. Get the web-app running locally (clone project & `bin/dev`).
+2. Clone a gist into the `src/gists` directory, i.e. `cd src/gists &&
+   git clone git@gist.github.com:<gist id>.git`
+3. Visit `http://localhost:5000/dev?ns=<ns of cljs file in gist>`
+4. Changes are automatically recompiled, and reloaded in your browser.
+
 
 ## Config
 
@@ -33,7 +46,8 @@ Run `bin/test`
 
 Deploys to Heroku. Run `bin/ship`
 
-* Don't forget to bump inky's version number any time deps change (including dep version changes).
+* Don't forget to bump inky's version number any time deps change
+  (including dep version changes).
 
 
 ## TODO
