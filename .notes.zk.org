@@ -1,0 +1,8 @@
+* Compilation error states
+
+** Ops
+1. Mark gist as compiling, handle capacity error, handle release capacity
+2. Lookup gist on github, handle rate limit error
+3. Clear/write source to fs, handle fs errors
+4. Compile source, handle compile errors
+5. Upload results to s3, handle upload errors
