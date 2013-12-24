@@ -53,6 +53,18 @@
       (slurp s)
       (catch java.io.FileNotFoundException e nil))))
 
+(defn parse-meta [source]
+  (let [forms (read-string (str "[" source "]"))
+        ns (->> forms
+                (filter #(and (coll? %) (= 'ns (first %))))
+                first)
+        doc (and (coll? ns)
+                 (> (count ns) 2)
+                 (string? (nth ns 2))
+                 (nth ns 2))]
+    {:ns (second ns)
+     :doc doc}))
+
 (defn guess-gist-ns [root-path]
   (->> (file-seq (java.io.File. root-path))
        (map #(.getAbsolutePath %))
@@ -68,18 +80,6 @@
         (str/replace link-re (fn [[href & rest]]
                                (str "<a href=\"" href "\">" href "</a>")))
         (str/replace #"\n\n" "<br /><br />"))))
-
-(defn parse-meta [source]
-  (let [forms (read-string (str "[" source "]"))
-        ns (->> forms
-                (filter #(and (coll? %) (= 'ns (first %))))
-                first)
-        doc (and (coll? ns)
-                 (> (count ns) 2)
-                 (string? (nth ns 2))
-                 (nth ns 2))]
-    {:ns (second ns)
-     :doc doc}))
 
 (defn url-encode [s]
   (when s
