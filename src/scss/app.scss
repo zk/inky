@@ -139,6 +139,11 @@ ol li {
 }
 
 .sketch-page {
+
+  h1 {
+    margin-bottom: 25px;
+  }
+
   iframe {
     width: 100%;
     height: 500px;
@@ -185,7 +190,7 @@ ol li {
 
   .compile-failed {
     padding: 20px;
-    background-color: #faa;
+    background-color: #fdd;
   }
 }
 

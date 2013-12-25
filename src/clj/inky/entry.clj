@@ -155,16 +155,16 @@
                [:p "Results are cached for subsequent loads."]
                [:div.box.animate]]}))
 
-(def in-progress (atom #{}))
+(def !in-progress (atom #{}))
 
 (defn add-in-progress [hash]
-  (swap! in-progress conj hash))
+  (swap! !in-progress conj hash))
 
 (defn remove-in-progress [hash]
-  (swap! in-progress disj hash))
+  (swap! !in-progress disj hash))
 
-(defn compiling? [hash]
-  (get @in-progress hash))
+(defn in-progress? [hash]
+  (get @!in-progress hash))
 
 (defn html-response [body & [opts]]
   (merge
@@ -315,7 +315,7 @@
          (if-not (:success compile-res)
            [:section.compile-failed
             [:h2 "Ruh-Roh, compile failed:"]
-            [:p "Rerun compilation by setting query param" [:code "recompile=true"] " on this page."]
+            [:p "Rerun compilation by setting query param " [:code "recompile=true"] " on this page."]
             [:pre
              "# Compilation result:\n\n"
              (util/pp-str compile-res)]]
@@ -362,6 +362,57 @@
   ($layout
     {:content body}))
 
+(defn compile-sketch [login gist-id]
+  (try
+    (add-in-progress gist-id)
+    (let [gist-data (gist-data gist-id)]
+      (if-not (:success gist-data)
+        (do
+          (remove-in-progress gist-id)
+          (html-response
+            (render-error
+              [:h2 "GitHub Rate Limit Hit"]
+              [:p "Whoops, looks like we hit the rate limit. GitHub allows us to call their API a limited number of times per hour. Please try again next hour."])
+            {:status 503}))
+        (let [source (:source gist-data)
+              dir (str "/tmp/inky/" gist-id)
+              source-dir (str "/tmp/inky/" gist-id)
+              filename (str source-dir "/code.cljs")]
+          (future
+            (time
+              (try
+                (println "Compiling" gist-id dir)
+                (when (.exists (java.io.File. dir))
+                  (sh/sh "rm" "-rf" dir))
+                (.mkdirs (java.io.File. dir))
+                (spit filename source)
+                (let [compile-res (comp/compile-cljs gist-id filename)]
+                  (println compile-res)
+                  (s3/put-string
+                    (str gist-id "/meta.edn")
+                    (pr-str
+                      (merge
+                        (parse-meta source)
+                        {:compile-res compile-res}
+                        gist-data
+                        {:created (util/now)
+                         :inky-version current-inky-version})))
+                  (s3/upload-file
+                    (str dir "/code.js")
+                    (str gist-id "/code.js"))
+                  (s3/put-string
+                    (str gist-id "/code.html")
+                    (render-compiled gist-id)
+                    {:content-type "text/html;charset=utf-8"}))
+                (println "done compiling" gist-id)
+                (catch Exception e
+                  (println e)
+                  (.printStackTrace e))
+                (finally (remove-in-progress gist-id))))))))
+    (catch Exception e
+      (println "Exception while compiling gist" gist-id " -- " (str e))
+      (remove-in-progress gist-id))))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
@@ -376,91 +427,32 @@
   ;; (?!)
   (GET "/:login/:gist-id" [login gist-id]
     (fn [r]
-      (let [recompile? (-> r :params :recompile)]
-        (cond
-          (compiling? gist-id) (if recompile?
-                                 (redirect (str "/" login "/" gist-id))
-                                 (render-compiling))
-
-          (and (in-s3? gist-id)
-               (not recompile?))
-          (let [{:keys [ns doc source url created] :as sketch-meta}
-                (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
-                     edn/read-string)]
-            (sketch-page login gist-id sketch-meta))
-
-          :else (do
-                  (try
-                    (add-in-progress gist-id)
-                    (let [url (-> r :params :url)
-                          gist-data (gist-data gist-id)]
-                      (if-not (:success gist-data)
-                        (do
-                          (remove-in-progress gist-id)
-                          (html-response
-                            (render-error
-                              [:h2 "GitHub Rate Limit Hit"]
-                              [:p "Whoops, looks like we hit the rate limit. GitHub allows us to call their API a limited number of times per hour. Please try again next hour."])
-                            {:status 503}))
-                        (let [source (:source gist-data)
-                              hash gist-id
-                              dir (str "/tmp/inky/" hash)
-                              source-dir (str "/tmp/inky/" hash)
-                              filename (str source-dir "/code.cljs")]
-                          (future
-                            (time
-                              (try
-                                (println "Compiling" hash url dir)
-                                (when (.exists (java.io.File. dir))
-                                  (sh/sh "rm" "-rf" dir))
-                                (.mkdirs (java.io.File. dir))
-                                (spit filename source)
-                                (let [compile-res (comp/compile-cljs hash filename)]
-                                  (println compile-res)
-                                  (s3/put-string
-                                    (str hash "/meta.edn")
-                                    (pr-str
-                                      (merge
-                                        (parse-meta source)
-                                        {:compile-res compile-res}
-                                        gist-data
-                                        {:created (util/now)
-                                         :inky-version current-inky-version})))
-                                  (s3/upload-file
-                                    (str dir "/code.js")
-                                    (str hash "/code.js"))
-                                  (s3/put-string
-                                    (str hash "/code.html")
-                                    (render-compiled hash)
-                                    {:content-type "text/html;charset=utf-8"}))
-                                (println "done compiling" hash)
-                                (catch Exception e
-                                  (println e)
-                                  (.printStackTrace e)))))
-                          (if recompile?
-                            (redirect (str "/" login "/" gist-id))
-                            (render-compiling)))))
-                    (finally (remove-in-progress hash))))))))
+      (try
+        (let [sketch-meta (try
+                            (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
+                                 edn/read-string)
+                            (catch Exception e
+                              (println "Exception reading meta from s3 for gist id:" gist-id)
+                              nil))
+              recompile? (-> r :params :recompile)
+              compile? (or (not sketch-meta)
+                           (-> r :params :recompile))
+              compiling? (in-progress? gist-id)]
+          (cond
+            compiling? (if recompile?
+                         (redirect (str "/" login "/" gist-id))
+                         (html-response (render-compiling)))
+            compile? (compile-sketch login gist-id)
+            :else (html-response (sketch-page login gist-id sketch-meta))))
+        (catch Exception e
+          (println "Exception while compiling gist" gist-id " -- " (str e))
+          (remove-in-progress gist-id)))))
 
   (GET "/:login/:gist-id/sketch" [login gist-id]
     (fn [r]
       (render-compiled gist-id)))
 
-  (GET "/show-compiling" [] (render-compiling))
-
-  (GET "/test-show-sketch" []
-    (fn [r]
-      (sketch-page
-        "zk"
-        "8048938"
-        {:doc "Let's start with something short. The quick brown fox jumps over the lazy dog."
-         :ns "testing.one.two.three"
-         :created 0
-         :inky-version "0.1.0"
-         :user {:login "zk"
-                :avatar-url "https://2.gravatar.com/avatar/a27a1085b85807e609f0aa63c6e06c04?d=https%3A%2F%2Fidenticons.github.com%2Fb36ed8a07e3cd80ee37138524690eca1.png&r=x&s=440"
-                :html-url ""}
-         :source "(defn foo \"bar\")"}))))
+  (GET "/show-compiling" [] (render-compiling)))
 
 (def routes
   (-> _routes

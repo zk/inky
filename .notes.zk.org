@@ -1,3 +1,5 @@
+<2013-12-24 Tue 00:57>
+
 * Compilation error states
 
 ** Ops
@@ -6,3 +8,14 @@
 3. Clear/write source to fs, handle fs errors
 4. Compile source, handle compile errors
 5. Upload results to s3, handle upload errors
+
+
+** States to /:login/:gist-di
++ Never compiled
+  + fetch gist, compile
++ Recompile requested
+  + fetch gist, compile
++ Compiling
+  + show compiling
+
+Check compiling first, mongo, atomic check
