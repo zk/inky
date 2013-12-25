@@ -1,4 +1,4 @@
-(defproject inky "0.1.2"
+(defproject inky "0.1.3"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -30,7 +30,8 @@
                  [org.clojure/core.logic "0.8.5"]
                  [tailrecursion/cljson "1.0.6"]
                  [congomongo "0.4.1"]
-                 [slingshot "0.10.3"]]
+                 [slingshot "0.10.3"]
+                 [prismatic/schema "0.1.10"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
                            (inky.entry/-main))}
