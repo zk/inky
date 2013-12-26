@@ -174,7 +174,10 @@
 
 (defn gist-data [gist-id]
   (try+
-    (let [resp (hcl/get (str "https://api.github.com/gists/" gist-id))]
+    (let [resp (hcl/get (str "https://api.github.com/gists/" gist-id)
+                 {:query-params {:client_id (env/str :gh-client-id)
+                                 :client_secret (env/str :gh-client-secret)}})]
+      (println resp)
       (let [body (->> resp
                       :body
                       util/from-json)
