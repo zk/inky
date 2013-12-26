@@ -205,7 +205,8 @@
    ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
    ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
    ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
-   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]])
+   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
+   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
 
 (def previews
   [["almost.haiku"
