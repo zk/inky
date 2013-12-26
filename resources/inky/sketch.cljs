@@ -63,8 +63,10 @@
 
 (def default-styles
   (concat meyer-reset
-    ["*" {:padding "0px"
-          :margin "0px"}
+    ["*" (merge
+           {:padding "0px"
+            :margin "0px"}
+           (vprefix :box-sizing "border-box"))
      "html, body" {:width "100%"
                    :height "100%"}
      "body" {:font-family "'Helvetica Neue', Arial, sans-serif;"}
@@ -78,3 +80,5 @@
           :text-decoration "none"}
      "a:hover" {:color "#2a6496"
                 :text-decoration "underline"}]))
+
+(def root (sel1 :.sketch))
