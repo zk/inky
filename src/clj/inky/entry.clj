@@ -436,15 +436,8 @@
             (assoc resp :status 200)))))
     opts))
 
-(defn spawn-workers [num-workers]
-  (doseq [id (repeatedly num-workers #(str (java.util.UUID/randomUUID)))]
-    (println "Spawning worker" id)
-    (future
-      (comp/run-worker! id))))
-
 (defn -main []
   (let [port (env/int :port 8080)]
-    (spawn-workers (env/int :num-workers 2))
     (start-http-server
       (var routes)
       {:port port :join? false})
