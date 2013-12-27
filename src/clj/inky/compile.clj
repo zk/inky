@@ -77,59 +77,63 @@
        :doc doc})
     (catch Exception e {})))
 
-(defn run-worker! [worker-id]
-  (do ;; while true
-    (let [{:keys [gist-id] :as job} (next-job!)]
-      (when job
-        (try
-          (let [gist-resp (gist-data gist-id)]
-            (if-not (:success gist-resp)
-              (mon/update! :compile-jobs
-                job
-                {:$set {:failed (util/now)
-                        :error-cause (:error-cause gist-resp)}})
-              (do
-                (println worker-id "Compiling" gist-id)
-                (let [source (:source gist-resp)
-                      dir (str "/tmp/inky/" gist-id)
-                      source-dir (str "/tmp/inky/" gist-id)
-                      filename (str source-dir "/code.cljs")]
-                  (when (.exists (java.io.File. dir))
-                    (sh/sh "rm" "-rf" dir))
-                  (.mkdirs (java.io.File. dir))
-                  (spit filename source)
-                  (let [compile-res (compile-cljs gist-id filename)]
-                    (println worker-id compile-res)
-                    (s3/put-string
-                      (str gist-id "/meta.edn")
-                      (pr-str
-                        (merge
-                          (parse-meta source)
-                          {:compile-res compile-res}
-                          gist-resp
-                          {:created (util/now)
-                           :inky-version common/inky-version})))
-                    (s3/upload-file
-                      (str dir "/code.js")
-                      (str gist-id "/code.js"))
-                    (s3/put-string
-                      (str gist-id "/code.html")
-                      (common/render-compiled gist-id)
-                      {:content-type "text/html;charset=utf-8"}))
-                  (println worker-id "done compiling" gist-id)
-                  (mon/update! :compile-jobs
-                    job
-                    {:$set {:succeeded (util/now)}})))))
-          (catch Exception e
-            (println worker-id e)
-            (.printStackTrace e)
+(defn compile-next-job! [worker-id]
+  (let [{:keys [gist-id] :as job} (next-job!)]
+    (when job
+      (try
+        (let [gist-resp (gist-data gist-id)]
+          (if-not (:success gist-resp)
             (mon/update! :compile-jobs
               job
               {:$set {:failed (util/now)
-                      :error-cause (str e)}})))))
+                      :error-cause (:error-cause gist-resp)}})
+            (do
+              (println worker-id "Compiling" gist-id)
+              (let [source (:source gist-resp)
+                    dir (str "/tmp/inky/" gist-id)
+                    source-dir (str "/tmp/inky/" gist-id)
+                    filename (str source-dir "/code.cljs")]
+                (when (.exists (java.io.File. dir))
+                  (sh/sh "rm" "-rf" dir))
+                (.mkdirs (java.io.File. dir))
+                (spit filename source)
+                (let [compile-res (compile-cljs gist-id filename)]
+                  (println worker-id compile-res)
+                  (s3/put-string
+                    (str gist-id "/meta.edn")
+                    (pr-str
+                      (merge
+                        (parse-meta source)
+                        {:compile-res compile-res}
+                        gist-resp
+                        {:created (util/now)
+                         :inky-version common/inky-version})))
+                  (s3/upload-file
+                    (str dir "/code.js")
+                    (str gist-id "/code.js"))
+                  (s3/put-string
+                    (str gist-id "/code.html")
+                    (common/render-compiled gist-id)
+                    {:content-type "text/html;charset=utf-8"}))
+                (println worker-id "done compiling" gist-id)
+                (mon/update! :compile-jobs
+                  job
+                  {:$set {:succeeded (util/now)}})))))
+        (catch Exception e
+          (println worker-id e)
+          (.printStackTrace e)
+          (mon/update! :compile-jobs
+            job
+            {:$set {:failed (util/now)
+                    :error-cause (str e)}}))))))
+
+(defn run-worker! [worker-id]
+  (while true
+    (compile-next-job! worker-id)
     (Thread/sleep 100)))
 
 (comment
+  (compile-next-job! "WORKERONE")
   (run-worker! "WORKERONE")
 
   (defn _compiled [job]

@@ -49,6 +49,7 @@ Env vars:
 * `MONGO_URL` -- DB connection url, mongodb:// format
 * `GH_CLIENT_ID` -- GH app creds
 * `GH_CLIENT_SECRET`
+* `NUM_WORKERS` -- Number of compile workers to spawn, defaults to 2
 
 
 ## Dev
