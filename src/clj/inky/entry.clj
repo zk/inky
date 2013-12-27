@@ -24,6 +24,16 @@
             [somnium.congomongo :as mon]
             [slingshot.slingshot :refer (try+)]))
 
+(def cljs-libs
+  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
+   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
+   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
+   ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
+   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
+   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
+   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
+   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
+
 (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
 
 (def current-inky-version
@@ -108,6 +118,8 @@
     [:head]
     [:body
      [:div.sketch]
+     [:script {:type "text/javascript"
+               :src "/js/react-0.8.0.js"}]
      [:script {:type "text/javascript"
                :src "/gists/goog/base.js"}]
      [:script {:type "text/javascript"
@@ -197,16 +209,6 @@
       ;; rate limit error
       (println "Rate limit hit fetching gist id:" gist-id)
       {:success false})))
-
-(def cljs-libs
-  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
-   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
-   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
-   ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
-   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
-   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
-   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
-   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
 
 (def previews
   [["almost.haiku"

@@ -32,7 +32,7 @@
                  [congomongo "0.4.1"]
                  [slingshot "0.10.3"]
                  [prismatic/schema "0.1.10"]
-                 #_[om "0.1.0-SNAPSHOT"]
+                 [om "0.1.0-SNAPSHOT"]
                  [secretary "0.4.0"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
@@ -50,6 +50,7 @@
                                   :output-dir "resources/public/gists"
                                   :optimizations :none
                                   :source-map true
+                                  :externs ["../react/externs/react.js"]
                                   :libs [""]}}
 
                ;; for debugging advanced compilation problems

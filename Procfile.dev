@@ -4,4 +4,4 @@ cljs: lein trampoline cljsbuild auto gists
 #mongo: mongod
 
 # Refresh 1st tab of chrome when fs changes are seen
-# refresher: lein run -m tools.refresher chrome src/clj src/md resources
+refresher: lein run -m tools.refresher chrome src/clj src/md resources
