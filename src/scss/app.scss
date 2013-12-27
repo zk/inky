@@ -255,20 +255,34 @@ ol li {
 
   .jobs {
 
+    a:hover { color: #2a6496; }
+
     .waiting {
       color: #7f8c8d;
+
+      a { color: #7f8c8d; }
+      a:hover { color: #2a6496; }
     }
 
     .succeeded {
       color: #27ae60;
+
+      a { color: #27ae60; }
+      a:hover { color: #2a6496; }
     }
 
     .failed {
       color: #c0392b;
+
+      a { color: #c0392b; }
+      a:hover { color: #2a6496; }
     }
 
     .compiling {
       color: #2980b9;
+
+      a { color: #2980b9; }
+      a:hover { color: #2a6496; }
     }
   }
 }

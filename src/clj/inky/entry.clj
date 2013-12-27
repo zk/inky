@@ -198,12 +198,15 @@
   (and (:started job)
        (:failed job)))
 
+(defn compile-duration [{:keys [started succeeded]}]
+  (format "%.2f" (/ (- succeeded started) 1000.0)))
+
 (defn $link-gist [gist-id text]
   [:a {:href (str "https://gist.github.com/" gist-id)} text])
 
 (defn $jobs-section [{:keys [jobs]}]
   [:section.jobs
-   [:h3 "Compile Jobs"]
+   [:h3 "Work Queue"]
    (if (> (count jobs) 0)
      [:ul
       (for [{:keys [gist-id] :as job} jobs]
@@ -216,7 +219,8 @@
           (succeeded-job? job)
           [:li.succeeded
            "Compiled " ($link-gist gist-id gist-id)
-           " "(util/timeago (:started job)) " ago."]
+           " "(util/timeago (:started job)) " ago."
+           " Took " (compile-duration job) " s."]
 
           (failed-job? job)
           [:li.failed

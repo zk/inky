@@ -77,6 +77,7 @@ Deploys to Heroku. Run `bin/ship`
 * Report compilation progress / errors on compile page
 * Handle s3 connection error / timeout (errors into compiling state
   right now).
+* Chart compile wait times
 
 
 ## Internals
