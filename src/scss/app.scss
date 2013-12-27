@@ -61,6 +61,12 @@ h1 {
   vertical-align: top;
 }
 
+.null-state {
+  background-color: #f8f8f8;
+  padding: 20px;
+  text-align: center;
+}
+
 .avatar {
   border-radius: 50%;
   height: 25px;
@@ -245,6 +251,47 @@ ol li {
   .sketch-examples ul {
     padding: 20px;
     background-color: rgba(0,0,0,0.02);
+  }
+
+  .jobs {
+
+    i {
+      width: 30px;
+      display: inline-block;
+      text-align: center;
+    }
+
+    a:hover { color: #2a6496; }
+
+    .waiting i {
+      color: #7f8c8d;
+
+      a { color: #7f8c8d; }
+      a:hover { color: #2a6496; }
+    }
+
+    .succeeded i {
+      color: #27ae60;
+
+      a { color: #27ae60; }
+      a:hover { color: #2a6496; }
+    }
+
+    .failed i {
+      color: #e74c3c;
+
+      a {
+        color: #e74c3c;
+      }
+      a:hover { color: #2a6496; }
+    }
+
+    .compiling i {
+      color: #2980b9;
+
+      a { color: #2980b9; }
+      a:hover { color: #2a6496; }
+    }
   }
 }
 

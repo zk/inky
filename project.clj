@@ -50,6 +50,7 @@
                                   :output-dir "resources/public/gists"
                                   :optimizations :none
                                   :source-map true
+                                  :externs ["../react/externs/react.js"]
                                   :libs [""]}}
 
                ;; for debugging advanced compilation problems

@@ -12,6 +12,7 @@
         [ring.util.response :only (response content-type redirect)])
   (:require [aleph.http :as ah]
             [inky.env :as env]
+            [inky.common :as common]
             [compojure.core :refer (defroutes GET)]
             [hiccup.page :as hp]
             [clojure.string :as str]
@@ -21,22 +22,19 @@
             [inky.util :as util]
             [clojure.java.shell :as sh]
             [clojure.edn :as edn]
-            [somnium.congomongo :as mon]
-            [slingshot.slingshot :refer (try+)]))
+            [somnium.congomongo :as mon]))
+
+(def cljs-libs
+  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
+   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
+   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
+   ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
+   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
+   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
+   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
+   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
 
 (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
-
-(def current-inky-version
-  (try
-    (let [source (slurp "project.clj")
-          forms (read-string (str "[" source "]"))]
-      (->> forms
-           (filter #(= 'defproject (first %)))
-           first
-           (drop 2)
-           first))
-    (catch java.io.FileNotFoundException e
-      "UNKNOWN")))
 
 (def ga-tag
   [:script (str "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -95,19 +93,13 @@
                :status))
     (catch Exception e false)))
 
-(defn render-compiled [hash]
-  (hp/html5
-    [:head]
-    [:body
-     [:div.sketch]
-     [:script {:type "text/javascript"
-               :src (str "http://f.inky.cc/" hash "/code.js")}]]))
-
 (defn render-dev [ns]
   (hp/html5
     [:head]
     [:body
      [:div.sketch]
+     [:script {:type "text/javascript"
+               :src "/js/react-0.8.0.js"}]
      [:script {:type "text/javascript"
                :src "/gists/goog/base.js"}]
      [:script {:type "text/javascript"
@@ -155,58 +147,16 @@
                [:p "Results are cached for subsequent loads."]
                [:div.box.animate]]}))
 
-(def !in-progress (atom #{}))
-
-(defn add-in-progress [hash]
-  (swap! !in-progress conj hash))
-
-(defn remove-in-progress [hash]
-  (swap! !in-progress disj hash))
-
 (defn in-progress? [hash]
-  (get @!in-progress hash))
+  (mon/fetch-one :compile-jobs :where {:gist-id hash
+                                       :succeeded nil
+                                       :failed nil}))
 
 (defn html-response [body & [opts]]
   (merge
     opts
     {:headers {"Content-Type" "text/html; utf-8"}
      :body body}))
-
-(defn gist-data [gist-id]
-  (try+
-    (let [resp (hcl/get (str "https://api.github.com/gists/" gist-id)
-                 {:query-params {:client_id (env/str :gh-client-id)
-                                 :client_secret (env/str :gh-client-secret)}})]
-      (println resp)
-      (let [body (->> resp
-                      :body
-                      util/from-json)
-            {:keys [login avatar_url html_url]} (:user body)]
-        {:source (->> body
-                      :files
-                      (filter #(or (.endsWith (str (first %)) ".cljs")
-                                   (.endsWith (str (first %)) ".clj")))
-                      first
-                      second
-                      :content)
-         :user {:login login
-                :avatar-url avatar_url
-                :html-url html_url}
-         :success true}))
-    (catch [:status 403] _
-      ;; rate limit error
-      (println "Rate limit hit fetching gist id:" gist-id)
-      {:success false})))
-
-(def cljs-libs
-  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
-   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
-   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
-   ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
-   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
-   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
-   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
-   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
 
 (def previews
   [["almost.haiku"
@@ -235,7 +185,60 @@
    [:a {:href inky-path}
     [:img {:src image-url}]]])
 
-(defn $intro []
+(defn compiling-job? [job]
+  (and (:started job)
+       (not (:succeeded job))
+       (not (:failed job))))
+
+(defn succeeded-job? [job]
+  (and (:started job)
+       (:succeeded job)))
+
+(defn failed-job? [job]
+  (and (:started job)
+       (:failed job)))
+
+(defn compile-duration [{:keys [started succeeded]}]
+  (format "%.2f" (/ (- succeeded started) 1000.0)))
+
+(defn $link-gist [gist-id text]
+  [:a {:href (str "https://gist.github.com/" gist-id)} text])
+
+(defn $jobs-section [{:keys [jobs]}]
+  [:section.jobs
+   [:h3 "Work Queue"]
+   (if (> (count jobs) 0)
+     [:ul
+      (for [{:keys [gist-id] :as job} jobs]
+        (cond
+          (compiling-job? job)
+          [:li.compiling
+           [:i.icon-cogs]
+           "Gist " ($link-gist gist-id gist-id)
+           ", started compiling " (util/timeago (:started job)) " ago."]
+
+          (succeeded-job? job)
+          [:li.succeeded
+           [:i.icon-ok]
+           "Compiled " ($link-gist gist-id gist-id)
+           " "(util/timeago (:started job)) " ago."
+           " Took " (compile-duration job) " s."]
+
+          (failed-job? job)
+          [:li.failed
+           [:i.icon-remove]
+           "Failed compiling " ($link-gist gist-id gist-id)
+           " "(util/timeago (:started job)) " ago."]
+
+          :else
+          [:li.waiting
+           [:i.icon-time]
+           "Gist " ($link-gist gist-id gist-id)
+           ", enqueued " (util/timeago (:created job)) " ago."]))]
+     [:div.null-state
+      "No jobs."])])
+
+(defn $intro [data]
   ($layout
     {:body-class :intro-page
      :content
@@ -282,7 +285,8 @@
           ". This will compile the provided source and redirect you to the resulting sketch."]
          [:li "???"]
          [:li "Profit"]]]
-       [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]]}))
+       [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]
+      ($jobs-section data)]}))
 
 (defn squeeze
   "Ellipses the middle of a long string."
@@ -366,61 +370,16 @@
   ($layout
     {:content body}))
 
-(defn compile-sketch [login gist-id]
-  (try
-    (add-in-progress gist-id)
-    (let [gist-data (gist-data gist-id)]
-      (if-not (:success gist-data)
-        (do
-          (remove-in-progress gist-id)
-          (html-response
-            (render-error
-              [:h2 "GitHub Rate Limit Hit"]
-              [:p "Whoops, looks like we hit the rate limit. GitHub allows us to call their API a limited number of times per hour. Please try again next hour."])
-            {:status 503}))
-        (let [source (:source gist-data)
-              dir (str "/tmp/inky/" gist-id)
-              source-dir (str "/tmp/inky/" gist-id)
-              filename (str source-dir "/code.cljs")]
-          (future
-            (time
-              (try
-                (println "Compiling" gist-id dir)
-                (when (.exists (java.io.File. dir))
-                  (sh/sh "rm" "-rf" dir))
-                (.mkdirs (java.io.File. dir))
-                (spit filename source)
-                (let [compile-res (comp/compile-cljs gist-id filename)]
-                  (println compile-res)
-                  (s3/put-string
-                    (str gist-id "/meta.edn")
-                    (pr-str
-                      (merge
-                        (parse-meta source)
-                        {:compile-res compile-res}
-                        gist-data
-                        {:created (util/now)
-                         :inky-version current-inky-version})))
-                  (s3/upload-file
-                    (str dir "/code.js")
-                    (str gist-id "/code.js"))
-                  (s3/put-string
-                    (str gist-id "/code.html")
-                    (render-compiled gist-id)
-                    {:content-type "text/html;charset=utf-8"}))
-                (println "done compiling" gist-id)
-                (catch Exception e
-                  (println e)
-                  (.printStackTrace e))
-                (finally (remove-in-progress gist-id))))))))
-    (catch Exception e
-      (println "Exception while compiling gist" gist-id " -- " (str e))
-      (remove-in-progress gist-id))))
+(defn request-compile [login gist-id]
+  (mon/insert! :compile-jobs {:login login :gist-id gist-id :created (util/now)})
+  true)
 
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
-                  ($intro))))
+                  ($intro {:jobs (mon/fetch :compile-jobs
+                                   :sort {:created -1}
+                                   :limit 30)}))))
 
   (GET "/dev" [] (fn [r]
                    (let [ns (or (-> r :params :ns)
@@ -431,30 +390,30 @@
   ;; (?!)
   (GET "/:login/:gist-id" [login gist-id]
     (fn [r]
-      (try
-        (let [sketch-meta (try
-                            (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
-                                 edn/read-string)
-                            (catch Exception e
-                              (println "Exception reading meta from s3 for gist id:" gist-id)
-                              nil))
-              recompile? (-> r :params :recompile)
-              compile? (or (not sketch-meta)
-                           (-> r :params :recompile))
-              compiling? (in-progress? gist-id)]
-          (cond
-            compiling? (if recompile?
-                         (redirect (str "/" login "/" gist-id))
-                         (html-response (render-compiling)))
-            compile? (compile-sketch login gist-id)
-            :else (html-response (sketch-page login gist-id sketch-meta))))
-        (catch Exception e
-          (println "Exception while compiling gist" gist-id " -- " (str e))
-          (remove-in-progress gist-id)))))
+      (let [;; s3 unavailable + missing meta handleded as the same, tease apart
+            sketch-meta (try
+                          (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
+                               edn/read-string)
+                          (catch Exception e
+                            (println "Exception reading meta from s3 for gist id:" gist-id)
+                            (.printStackTrace e)
+                            nil))
+            recompile? (-> r :params :recompile)
+            compile? (or (not sketch-meta)
+                         (-> r :params :recompile))
+            compiling? (in-progress? gist-id)]
+
+        (cond
+          compiling? (if recompile?
+                       (redirect (str "/" login "/" gist-id))
+                       (html-response (render-compiling)))
+          compile? (do (request-compile login gist-id)
+                       (redirect (str "/" login "/" gist-id)))
+          :else (html-response (sketch-page login gist-id sketch-meta))))))
 
   (GET "/:login/:gist-id/sketch" [login gist-id]
     (fn [r]
-      (render-compiled gist-id)))
+      (common/render-compiled gist-id)))
 
   (GET "/show-compiling" [] (render-compiling)))
 

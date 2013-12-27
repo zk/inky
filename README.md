@@ -33,6 +33,7 @@ Starter gist to fork: https://gist.github.com/zk/8108564
 ## Prereqs
 
 * https://github.com/ddollar/foreman
+* http://www.mongodb.org/ (brew / apt / yum ok)
 
 
 ## Config
@@ -46,12 +47,16 @@ Env vars:
 * `GA_TRACKING_ID` -- Google Analytics
 * `GA_TRACKING_HOST` -- ex. 'inky.cc'
 * `MONGO_URL` -- DB connection url, mongodb:// format
-* `GH_USER_TOKEN` -- OAuth / personal token for api calls
+* `GH_CLIENT_ID` -- GH app creds
+* `GH_CLIENT_SECRET`
+* `NUM_WORKERS` -- Number of compile workers to spawn, defaults to 2
 
 
 ## Dev
 
 Copy bin/dev.sample to bin/dev, fill in appropriate env vars. Note that the env vars are only necessary if you're working on inky. If you're working on a sketch locally, only `$PORT` is required (provided by foreman).
+
+**Warning:** There's a nasty bug where foreman won't correctly kill java processes it starts **when foreman exits due to a child process exiting** (this behavior doesn't manifest when you SIGINT foreman). You may need to manually kill previous processes manually.
 
 
 ## Testing
@@ -71,6 +76,28 @@ Deploys to Heroku. Run `bin/ship`
 
 * A bunch of stuff tracking compiles is in mem, prevents scale-out.
 * Report compilation progress / errors on compile page
+* Handle s3 connection error / timeout (errors into compiling state
+  right now).
+* Chart compile wait times
+
+
+## Internals
+
+### Job States
+
+Inky runs several worker threads internally to compile gists, which
+pull from a job queue backed by MongoDB (`:compile-jobs`). Jobs
+transition through several states as they are compiled, and as errors
+pop up. All flags are unix timestamps unless otherwise specified.
+
+* Enqueued -- `:created` is set.
+* Compiling -- `:created` and `:started` are set.
+* Compile completed successfully -- `:created`, `:started`, and
+  `:succeeded` are set.
+* Compile errored -- `:created`, `:started`, and `:failed` are set
+  (see `:error-cause` for message).
+
+This is a first cut on representing the different job states.
 
 
 ## License
