@@ -21,7 +21,9 @@
   "Retrieve and parse int env var."
   [sym & [default]]
   (if-let [env-var (env sym)]
-    (Integer/parseInt env-var)
+    (if (integer? env-var)
+      env-var
+      (Integer/parseInt env-var))
     default))
 
 (defn str
