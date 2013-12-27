@@ -9,5 +9,6 @@ cd $SCRIPT_DIR/.. && \
    GA_TRACKING_ID=FILL_IN \
    GA_TRACKING_HOST=dev.inky.cc \
    MONGO_URL=mongodb://localhost:27017 \
-   GH_USER_TOKEN=FILL_IN \
+   GH_CLIENT_ID=FILL_IN \
+   GH_CLIENT_SECRET=FILL_IN \
    foreman start -f Procfile.dev
