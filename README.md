@@ -33,6 +33,7 @@ Starter gist to fork: https://gist.github.com/zk/8108564
 ## Prereqs
 
 * https://github.com/ddollar/foreman
+* http://www.mongodb.org/ (brew / apt / yum ok)
 
 
 ## Config
