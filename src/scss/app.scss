@@ -255,30 +255,38 @@ ol li {
 
   .jobs {
 
+    i {
+      width: 30px;
+      display: inline-block;
+      text-align: center;
+    }
+
     a:hover { color: #2a6496; }
 
-    .waiting {
+    .waiting i {
       color: #7f8c8d;
 
       a { color: #7f8c8d; }
       a:hover { color: #2a6496; }
     }
 
-    .succeeded {
+    .succeeded i {
       color: #27ae60;
 
       a { color: #27ae60; }
       a:hover { color: #2a6496; }
     }
 
-    .failed {
-      color: #c0392b;
+    .failed i {
+      color: #e74c3c;
 
-      a { color: #c0392b; }
+      a {
+        color: #e74c3c;
+      }
       a:hover { color: #2a6496; }
     }
 
-    .compiling {
+    .compiling i {
       color: #2980b9;
 
       a { color: #2980b9; }

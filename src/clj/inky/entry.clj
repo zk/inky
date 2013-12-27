@@ -213,22 +213,26 @@
         (cond
           (compiling-job? job)
           [:li.compiling
+           [:i.icon-cogs]
            "Gist " ($link-gist gist-id gist-id)
            ", started compiling " (util/timeago (:started job)) " ago."]
 
           (succeeded-job? job)
           [:li.succeeded
+           [:i.icon-ok]
            "Compiled " ($link-gist gist-id gist-id)
            " "(util/timeago (:started job)) " ago."
            " Took " (compile-duration job) " s."]
 
           (failed-job? job)
           [:li.failed
+           [:i.icon-remove]
            "Failed compiling " ($link-gist gist-id gist-id)
            " "(util/timeago (:started job)) " ago."]
 
           :else
           [:li.waiting
+           [:i.icon-time]
            "Gist " ($link-gist gist-id gist-id)
            ", enqueued " (util/timeago (:created job)) " ago."]))]
      [:div.null-state
