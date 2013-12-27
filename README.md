@@ -55,6 +55,8 @@ Env vars:
 
 Copy bin/dev.sample to bin/dev, fill in appropriate env vars. Note that the env vars are only necessary if you're working on inky. If you're working on a sketch locally, only `$PORT` is required (provided by foreman).
 
+**Warning:** There's a nasty bug where foreman won't correctly kill java processes it starts **when foreman exits due to a child processes exiting** (this behavior doesn't manifest when you SIGINT foreman). You may need to manually kill previous processes manually.
+
 
 ## Testing
 
