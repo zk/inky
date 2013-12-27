@@ -46,7 +46,8 @@ Env vars:
 * `GA_TRACKING_ID` -- Google Analytics
 * `GA_TRACKING_HOST` -- ex. 'inky.cc'
 * `MONGO_URL` -- DB connection url, mongodb:// format
-* `GH_USER_TOKEN` -- OAuth / personal token for api calls
+* `GH_CLIENT_ID` -- GH app creds
+* `GH_CLIENT_SECRET`
 
 
 ## Dev
