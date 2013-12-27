@@ -75,6 +75,27 @@ Deploys to Heroku. Run `bin/ship`
 
 * A bunch of stuff tracking compiles is in mem, prevents scale-out.
 * Report compilation progress / errors on compile page
+* Handle s3 connection error / timeout (errors into compiling state
+  right now).
+
+
+## Internals
+
+### Job States
+
+Inky runs several worker threads internally to compile gists, which
+pull from a job queue backed by MongoDB (`:compile-jobs`). Jobs
+transition through several states as they are compiled, and as errors
+pop up. All flags are unix timestamps unless otherwise specified.
+
+* Enqueued -- `:created` is set.
+* Compiling -- `:created` and `:started` are set.
+* Compile completed successfully -- `:created`, `:started`, and
+  `:succeeded` are set.
+* Compile errored -- `:created`, `:started`, and `:failed` are set
+  (see `:error-cause` for message).
+
+This is a first cut on representing the different job states.
 
 
 ## License

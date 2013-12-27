@@ -61,6 +61,12 @@ h1 {
   vertical-align: top;
 }
 
+.null-state {
+  background-color: #f8f8f8;
+  padding: 20px;
+  text-align: center;
+}
+
 .avatar {
   border-radius: 50%;
   height: 25px;
@@ -245,6 +251,25 @@ ol li {
   .sketch-examples ul {
     padding: 20px;
     background-color: rgba(0,0,0,0.02);
+  }
+
+  .jobs {
+
+    .waiting {
+      color: #7f8c8d;
+    }
+
+    .succeeded {
+      color: #27ae60;
+    }
+
+    .failed {
+      color: #c0392b;
+    }
+
+    .compiling {
+      color: #2980b9;
+    }
   }
 }
 
