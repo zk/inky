@@ -34,8 +34,6 @@
    ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
    ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
 
-(mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
-
 (def ga-tag
   [:script (str "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
   (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -437,7 +435,9 @@
     opts))
 
 (defn -main []
+  (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
   (let [port (env/int :port 8080)]
+    (worker/spawn (env/int :num-workers 2))
     (start-http-server
       (var routes)
       {:port port :join? false})

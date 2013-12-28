@@ -1,5 +1,4 @@
 web: lein repl :headless
-worker: lein run -m inky.worker
 sass: sass --watch src/scss:resources/public/css
 cljs: lein trampoline cljsbuild auto gists
 mongo: mongod
