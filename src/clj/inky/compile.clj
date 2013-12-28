@@ -26,6 +26,7 @@
                       first
                       second
                       :content)
+         :public (:public body)
          :user {:login login
                 :avatar-url avatar_url
                 :html-url html_url}
@@ -64,7 +65,9 @@
     job))
 
 (defn compile-next-job! [worker-id]
-  (let [{:keys [gist-id] :as job} (next-job!)]
+  (let [{:keys [gist-id] :as job} (next-job!)
+        uuid (util/uuid)
+        dir (str "/tmp/inky/" uuid)]
     (when job
       (try
         (let [gist-resp (gist-data gist-id)]
@@ -76,14 +79,13 @@
             (do
               (println worker-id "Compiling" gist-id)
               (let [source (:source gist-resp)
-                    dir (str "/tmp/inky/" gist-id)
-                    source-dir (str "/tmp/inky/" gist-id)
+                    source-dir (str "/tmp/inky/" uuid)
                     filename (str source-dir "/code.cljs")]
                 (when (.exists (java.io.File. dir))
                   (sh/sh "rm" "-rf" dir))
                 (.mkdirs (java.io.File. dir))
                 (spit filename source)
-                (let [compile-res (compile-cljs gist-id filename)]
+                (let [compile-res (compile-cljs uuid filename)]
                   (println worker-id compile-res)
                   (s3/put-string
                     (str gist-id "/meta.edn")
@@ -111,7 +113,10 @@
           (mon/update! :compile-jobs
             job
             {:$set {:failed (util/now)
-                    :error-cause (str e)}}))))))
+                    :error-cause (str e)}}))
+        (finally
+          (when (.exists (java.io.File. dir))
+            (sh/sh "rm" "-rf" dir)))))))
 
 (defn run-worker! [worker-id]
   (while true
@@ -144,4 +149,11 @@
     (mon/insert! :compile-jobs j))
 
   (_print-job)
+
+  (defn request-compile [login gist-id]
+    (mon/insert! :compile-jobs {:login login :gist-id gist-id :created (util/now)})
+    true)
+
+
+
   )

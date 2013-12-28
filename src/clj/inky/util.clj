@@ -77,3 +77,6 @@
         (map compile-rule)
         (interpose " ")
         (apply str))])
+
+(defn uuid []
+  (str (java.util.UUID/randomUUID)))
