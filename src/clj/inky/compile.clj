@@ -59,7 +59,7 @@
               :compile-jobs
               {:succeeded nil :started nil}
               {:$set {:started (util/now)}}
-              :sort {:created -1}
+              :sort {:created 1}
               :return-new? true)]
     job))
 
