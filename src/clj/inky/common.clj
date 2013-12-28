@@ -20,3 +20,20 @@
      [:div.sketch]
      [:script {:type "text/javascript"
                :src (str "http://f.inky.cc/" hash "/code.js")}]]))
+
+(defn parse-source-meta
+  "Parse meta info from source string, such as namespace and ns doc
+   string."
+  [source]
+  (try
+    (let [forms (read-string (str "[" source "]"))
+          ns (->> forms
+                  (filter #(and (coll? %) (= 'ns (first %))))
+                  first)
+          doc (and (coll? ns)
+                   (> (count ns) 2)
+                   (string? (nth ns 2))
+                   (nth ns 2))]
+      {:ns (second ns)
+       :doc doc})
+    (catch Exception e {})))

@@ -63,20 +63,6 @@
               :return-new? true)]
     job))
 
-(defn parse-meta [source]
-  (try
-    (let [forms (read-string (str "[" source "]"))
-          ns (->> forms
-                  (filter #(and (coll? %) (= 'ns (first %))))
-                  first)
-          doc (and (coll? ns)
-                   (> (count ns) 2)
-                   (string? (nth ns 2))
-                   (nth ns 2))]
-      {:ns (second ns)
-       :doc doc})
-    (catch Exception e {})))
-
 (defn compile-next-job! [worker-id]
   (let [{:keys [gist-id] :as job} (next-job!)]
     (when job
@@ -103,7 +89,7 @@
                     (str gist-id "/meta.edn")
                     (pr-str
                       (merge
-                        (parse-meta source)
+                        (common/parse-source-meta source)
                         {:compile-res compile-res}
                         gist-resp
                         {:created (util/now)

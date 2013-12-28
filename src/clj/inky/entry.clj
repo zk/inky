@@ -20,6 +20,7 @@
             [inky.compile :as comp]
             [inky.s3 :as s3]
             [inky.util :as util]
+            [inky.worker :as worker]
             [clojure.java.shell :as sh]
             [clojure.edn :as edn]
             [somnium.congomongo :as mon]))
@@ -45,24 +46,11 @@
 (def link-re #"(([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?")
 
 (defn safe-slurp [s]
+  "Like slurp, but doesn't throw an exception when file not found."
   (when s
     (try
       (slurp s)
       (catch java.io.FileNotFoundException e nil))))
-
-(defn parse-meta [source]
-  (try
-    (let [forms (read-string (str "[" source "]"))
-          ns (->> forms
-                  (filter #(and (coll? %) (= 'ns (first %))))
-                  first)
-          doc (and (coll? ns)
-                   (> (count ns) 2)
-                   (string? (nth ns 2))
-                   (nth ns 2))]
-      {:ns (second ns)
-       :doc doc})
-    (catch Exception e {})))
 
 (defn guess-gist-ns [root-path]
   (->> (file-seq (java.io.File. root-path))
@@ -70,7 +58,7 @@
        (filter #(.endsWith % ".cljs"))
        first
        safe-slurp
-       parse-meta
+       common/parse-source-meta
        :ns))
 
 (defn format-doc [s]
