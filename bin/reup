@@ -1,8 +1,12 @@
 #!/bin/bash
 
+set -e
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 pushd $SCRIPT_DIR/.. > /dev/null
+
+git pull origin master
 
 foreman export upstart -u root -l /var/log/inky -a inky /tmp/inky-upstart
 sudo mv /tmp/inky-upstart/* /etc/init/
