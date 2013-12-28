@@ -14,6 +14,7 @@
             [inky.env :as env]
             [inky.common :as common]
             [compojure.core :refer (defroutes GET)]
+            [compojure.route :refer (not-found)]
             [hiccup.page :as hp]
             [clojure.string :as str]
             [clj-http.client :as hcl]
@@ -360,6 +361,28 @@
   (mon/insert! :compile-jobs {:login login :gist-id gist-id :created (util/now)})
   true)
 
+
+(def $four-oh-four
+  #_($layout
+      {:content
+       [:div
+        [:h1 {:style "font-size: 100px; text-align: center; margin-top: 150px;"} "404"]]})
+  (hp/html5
+    [:head
+     [:title "404 | inky.cc"]
+     (util/$style
+       [:body {:font-family "'Helvetica Neue', Arial, sans-serif"
+               :padding-top "50px"
+               :color "#555"}
+        :h1 {:font-size "60px"
+             :text-align "center"
+             :font-weight "300"}
+        :a {:color "#428bca"
+            :text-decoration "none"}
+        :a:hover {:color "#2a6496"}])]
+    [:body
+     [:h1 "404 | " [:a {:href "/"} "inky.cc"]]]))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
                 (html-response
@@ -401,7 +424,9 @@
     (fn [r]
       (common/render-compiled gist-id)))
 
-  (GET "/show-compiling" [] (render-compiling)))
+  (GET "/show-compiling" [] (render-compiling))
+
+  (not-found $four-oh-four))
 
 (def routes
   (-> _routes

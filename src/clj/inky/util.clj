@@ -49,3 +49,31 @@
   (let [w (java.io.StringWriter.)]
     (pprint o w)
     (.toString w)))
+
+
+(defn compile-transform [[prop val]]
+  (str
+    (name prop)
+    ":"
+    (cond
+      (string? val) val
+      (coll? val) (->> val
+                       (map name)
+                       (interpose ",")
+                       (apply str)))
+    ";"))
+
+(defn compile-rule [[sel transform]]
+  (str (name sel)
+       "{"
+       (->> transform
+            (map compile-transform)
+            (apply str))
+       "}"))
+
+(defn $style [rules]
+  [:style {:type "text/css"}
+   (->> (partition 2 rules)
+        (map compile-rule)
+        (interpose " ")
+        (apply str))])
