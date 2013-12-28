@@ -448,10 +448,15 @@
     opts))
 
 (defn -main []
-  (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
-  (let [port (env/int :port 8080)]
-    (worker/spawn (env/int :num-workers 2))
-    (start-http-server
-      (var routes)
-      {:port port :join? false})
-    (println (format "Server running on port %d" port))))
+  (try
+    (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
+    (let [port (env/int :port 8080)]
+      (worker/spawn (env/int :num-workers 2))
+      (start-http-server
+        (var routes)
+        {:port port :join? false})
+      (println (format "Server running on port %d" port)))
+    (catch Exception e
+      (println e)
+      (.printStackTrace e)
+      (throw e))))
