@@ -188,21 +188,21 @@
 (defn compile-duration [{:keys [started succeeded]}]
   (format "%.2f" (/ (- succeeded started) 1000.0)))
 
-(defn $link-gist [gist-id text]
-  [:a {:href (str "https://gist.github.com/" gist-id)} text])
+(defn $link-gist [login gist-id text]
+  [:a {:href (str "/" login "/" gist-id)} text])
 
 (defn $jobs-section [{:keys [jobs]}]
   [:section.jobs
    [:h3 "Work Queue"]
    (if (> (count jobs) 0)
      [:ul
-      (for [{:keys [gist-id public-gist] :as job} jobs]
+      (for [{:keys [login gist-id public-gist] :as job} jobs]
         (cond
           (compiling-job? job)
           [:li.compiling
            [:i.icon-cogs]
            "Gist " (if public-gist
-                     ($link-gist gist-id gist-id)
+                     ($link-gist login gist-id gist-id)
                      "a private gist")
            ", started compiling " (util/timeago (:started job)) " ago."]
 
@@ -211,7 +211,7 @@
            [:i.icon-ok]
            "Compiled "
            (if public-gist
-             ($link-gist gist-id gist-id)
+             ($link-gist login gist-id gist-id)
              "a private gist")
            " " (util/timeago (:started job)) " ago."
            " Took " (compile-duration job) " s."]
@@ -221,7 +221,7 @@
            [:i.icon-remove]
            "Failed compiling "
            (if public-gist
-             ($link-gist gist-id gist-id)
+             ($link-gist login gist-id gist-id)
              "a private gist")
            " "(util/timeago (:started job)) " ago."]
 
@@ -230,7 +230,7 @@
            [:i.icon-time]
            "Gist "
            (if public-gist
-             ($link-gist gist-id gist-id)
+             ($link-gist login gist-id gist-id)
              "a private gist")
            ", enqueued " (util/timeago (:created job)) " ago."]))]
      [:div.null-state
