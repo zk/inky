@@ -196,7 +196,7 @@
    [:h3 "Work Queue"]
    (if (> (count jobs) 0)
      [:ul
-      (for [{:keys [gist-id] :as job} jobs]
+      (for [{:keys [gist-id public-gist] :as job} jobs]
         (cond
           (compiling-job? job)
           [:li.compiling
@@ -207,20 +207,29 @@
           (succeeded-job? job)
           [:li.succeeded
            [:i.icon-ok]
-           "Compiled " ($link-gist gist-id gist-id)
-           " "(util/timeago (:started job)) " ago."
+           "Compiled "
+           (if public-gist
+             ($link-gist gist-id gist-id)
+             "a private gist")
+           " " (util/timeago (:started job)) " ago."
            " Took " (compile-duration job) " s."]
 
           (failed-job? job)
           [:li.failed
            [:i.icon-remove]
-           "Failed compiling " ($link-gist gist-id gist-id)
+           "Failed compiling "
+           (if public-gist
+             ($link-gist gist-id gist-id)
+             "a private gist")
            " "(util/timeago (:started job)) " ago."]
 
           :else
           [:li.waiting
            [:i.icon-time]
-           "Gist " ($link-gist gist-id gist-id)
+           "Gist "
+           (if public-gist
+             ($link-gist gist-id gist-id)
+             "a private gist")
            ", enqueued " (util/timeago (:created job)) " ago."]))]
      [:div.null-state
       "No jobs."])])
