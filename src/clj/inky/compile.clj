@@ -36,12 +36,10 @@
       (println "Rate limit hit fetching gist id:" gist-id)
       {:success false :error-cause "Rate limit hit fetching gist."})))
 
-(def compile-context (atom {}))
-
 (defn compile-cljs [hash filename]
   (try
     {:success true
-     :return (binding [cljsenv/*compiler* compile-context]
+     :return (binding [cljsenv/*compiler* (atom {})]
                (cljsc/build
                  filename
                  {:optimizations :advanced
