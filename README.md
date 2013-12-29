@@ -82,6 +82,7 @@ Deploys to Heroku. Run `bin/ship`
 * Compile times are looooooong, ~45-120 seconds on heroku, figure
   something out here.
 * Implement better way than newing `Thread`s for spawning workers
+* Fix mobile experience
 
 
 ## Internals
