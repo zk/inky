@@ -26,7 +26,7 @@
                       first
                       second
                       :content)
-         :public (:public body)
+         :public-gist (:public body)
          :user {:login login
                 :avatar-url avatar_url
                 :html-url html_url}
@@ -76,7 +76,8 @@
           (if-not (:success gist-resp)
             (mon/update! :compile-jobs
               job
-              {:$set {:failed (util/now)
+              {:$set {:public-gist (:public-gist gist-resp)
+                      :failed (util/now)
                       :error-cause (:error-cause gist-resp)}})
             (do
               (println worker-id "Compiling" gist-id)
@@ -108,7 +109,8 @@
                 (println worker-id "done compiling" gist-id)
                 (mon/update! :compile-jobs
                   job
-                  {:$set {:succeeded (util/now)}})))))
+                  {:$set {:public-gist (:public-gist gist-resp)
+                          :succeeded (util/now)}})))))
         (catch Exception e
           (println worker-id e)
           (.printStackTrace e)

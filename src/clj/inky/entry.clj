@@ -201,7 +201,9 @@
           (compiling-job? job)
           [:li.compiling
            [:i.icon-cogs]
-           "Gist " ($link-gist gist-id gist-id)
+           "Gist " (if public-gist
+                     ($link-gist gist-id gist-id)
+                     "a private gist")
            ", started compiling " (util/timeago (:started job)) " ago."]
 
           (succeeded-job? job)
