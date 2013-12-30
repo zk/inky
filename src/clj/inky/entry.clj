@@ -307,7 +307,8 @@
                         (apply str)))))))
 
 (defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version compile-res]}]
-  (let [sketch-url (str "/" login "/" gist-id "/sketch")
+  (let [main-url (str "/" login "/" gist-id)
+        sketch-url (str "/" login "/" gist-id "/sketch")
         gist-url (str "https://gist.github.com/" login "/" gist-id)
         user-url (str "https://github.com/" login)]
     ($layout
@@ -321,7 +322,7 @@
          (if-not (:success compile-res)
            [:section.compile-failed
             [:h2 "Ruh-Roh, compile failed:"]
-            [:p "Rerun compilation by setting query param " [:code "recompile=true"] " on this page."]
+            [:p [:a {:href (str main-url "?recompile=true")} "Click here"] " to recompile. You can also re-run compilation by setting query param " [:code "recompile=true"] " on this page."]
             [:pre
              "# Compilation result:\n\n"
              (util/pp-str compile-res)]]
