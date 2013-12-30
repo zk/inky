@@ -201,10 +201,7 @@
           (compiling-job? job)
           [:li.compiling
            [:i.icon-cogs]
-           "Gist " (if public-gist
-                     ($link-gist login gist-id gist-id)
-                     "a private gist")
-           ", started compiling " (util/timeago (:started job)) " ago."]
+           "Started compiling a gist " (util/timeago (:started job)) " ago."]
 
           (succeeded-job? job)
           [:li.succeeded
@@ -228,11 +225,7 @@
           :else
           [:li.waiting
            [:i.icon-time]
-           "Gist "
-           (if public-gist
-             ($link-gist login gist-id gist-id)
-             "a private gist")
-           ", enqueued " (util/timeago (:created job)) " ago."]))]
+           "Enqueued a gist " (util/timeago (:created job)) " ago."]))]
      [:div.null-state
       "No jobs."])])
 
