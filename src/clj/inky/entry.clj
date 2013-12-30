@@ -209,7 +209,7 @@
            "Compiled "
            (if public-gist
              ($link-gist login gist-id gist-id)
-             "a private gist")
+             "a gist")
            " " (util/timeago (:started job)) " ago."
            " Took " (compile-duration job) " s."]
 
@@ -219,7 +219,7 @@
            "Failed compiling "
            (if public-gist
              ($link-gist login gist-id gist-id)
-             "a private gist")
+             "a gist")
            " "(util/timeago (:started job)) " ago."]
 
           :else
