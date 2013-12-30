@@ -74,8 +74,7 @@ Deploys to Heroku. Run `bin/ship`
 
 ## TODO
 
-* A bunch of stuff tracking compiles is in mem, prevents scale-out.
-* Report compilation progress / errors on compile page
+* Report compilation progress on compile page
 * Handle s3 connection error / timeout (errors into compiling state
   right now).
 * Chart compile wait times
