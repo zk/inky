@@ -321,7 +321,7 @@
              (util/pp-str compile-res)]]
            [:section
             [:div.iframe-container
-             [:iframe {:src sketch-url}]]
+             [:iframe {:src sketch-url :scrolling "no"}]]
             [:div.controls
              [:a {:href gist-url} "fork this sketch"]
              " / "
