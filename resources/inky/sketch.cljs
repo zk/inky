@@ -62,13 +62,14 @@
                    :vertical-align "baseline"}])
 
 (def default-styles
-  (concat meyer-reset
+  (concat
+    meyer-reset
     ["*" (merge
            {:padding "0px"
             :margin "0px"}
            (vprefix :box-sizing "border-box"))
-     "html, body" {:width "100%"
-                   :height "100%"}
+     "html, body, .sketch" {:width "100%"
+                            :height "100%"}
      "body" {:font-family "'Helvetica Neue', Arial, sans-serif;"}
      "h1" {:font-size "30px"
            :font-weight "500"}
