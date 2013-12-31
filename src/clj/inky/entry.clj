@@ -97,7 +97,7 @@
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
     (-> [:head
-         [:meta {:name "viewport" :content "initial-scale=1, maximum-scale=1"}]
+         [:meta {:name "viewport" :content "width=768px"}]
          [:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]
          [:link {:rel :stylesheet :href "/css/app.css"}]]
         (concat head)
@@ -320,7 +320,8 @@
              "# Compilation result:\n\n"
              (util/pp-str compile-res)]]
            [:section
-            [:iframe {:src sketch-url}]
+            [:div.iframe-container
+             [:iframe {:src sketch-url}]]
             [:div.controls
              [:a {:href gist-url} "fork this sketch"]
              " / "
