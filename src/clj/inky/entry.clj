@@ -390,7 +390,7 @@
                 (html-response
                   ($intro {:jobs (mon/fetch :compile-jobs
                                    :sort {:created -1}
-                                   :limit 30)}))))
+                                   :limit 10)}))))
 
   (GET "/dev" [] (fn [r]
                    (let [ns (or (-> r :params :ns)
