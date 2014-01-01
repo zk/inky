@@ -276,7 +276,7 @@
           ". This will compile the provided source and redirect you to the resulting sketch."]
          [:li "???"]
          [:li "Profit"]]]
-       [:p "Keeping your lines to < 80 characters makes it a bit easier to read your source."]]
+       [:p "It makes it a bit easier to read your source if you keep your lines <= 80 characters."]]
       ($jobs-section data)]}))
 
 (defn squeeze
