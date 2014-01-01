@@ -369,10 +369,6 @@
 
 
 (def $four-oh-four
-  #_($layout
-      {:content
-       [:div
-        [:h1 {:style "font-size: 100px; text-align: center; margin-top: 150px;"} "404"]]})
   (hp/html5
     [:head
      [:title "404 | inky.cc"]
