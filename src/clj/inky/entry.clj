@@ -231,13 +231,18 @@
         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
         " if you'd like your library to be available to inky sketches, or open a pull request at "
         [:a {:href "https://github.com/zk/inky"} "zk/inky"]
-        "."]]
+        "."]
+       [:p "Getting started instructions below."]]
       [:section.sketch-examples
        [:h3 "Recent Sketches"]
        [:ul
         (map $sketch-preview previews)]]
       [:section.instructions
-       [:h3 "How-To"]
+       [:h3 "Compiling Your Sketches"]
+       [:p
+        "Sketches are "
+        [:a {:href "https://gist.github.com"} "gist"]
+        "-backed."]
        [:div.instructions-list
         [:ol
          [:li
@@ -245,8 +250,34 @@
           [:code "inky.cc/:gh-login/:gist-id"]
           ". This will compile the provided source and redirect you to the resulting sketch."]
          [:li "???"]
-         [:li "Profit"]]]
-       [:p "It makes it a bit easier to read your source if you keep your lines <= 80 characters."]]
+         [:li "Profit"]]]]
+      [:section.local-dev
+       [:h3 "Sketching Locally"]
+       [:p
+        "We've got a lein plugin to help you bring your tools to bear on inky sketches."
+        " First, add "
+        [:code "[lein-inky \"0.1.4\"]"]
+        " to your "
+        [:code "~/.lein/profiles.clj"]
+        ". Then:"]
+       [:ol
+        [:li
+         "Fork "
+         [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]]
+        [:li
+         "Clone that gist locally: "
+         [:code "git clone git@gist.github.com/&lt;gist-id&gt;.git"]
+         "."]
+        [:li [:code "cd &lt;gist-id&gt;"]]
+        [:li "Run " [:code "lein inky"]]]
+       [:p
+        "You'll see something like the following output. Visit "
+        [:a {:href "http://localhost:4659"} "http://localhost:4659"]
+        " and start editing your sketch w/ source maps."]
+       [:p
+        "When you're done editing, commit, push, and visit "
+        [:code "http://inky.cc/&lt;github-login&gt;/&lt;gist-id&gt;"]
+        " to make your sketches available online."]]
       ($jobs-section data)]}))
 
 (defn squeeze
