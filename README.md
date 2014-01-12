@@ -20,7 +20,8 @@ Just add the lein-inky plugin to your `~/.lein/profiles.clj` like so:
 
 After that:
 
-1. Create a gist with a cljs file. For this example we'll call it `first.cljs`.
+1. Create a gist with a cljs file. Easy start: fork
+   [this gist](https://gist.github.com/zk/8108564).
 2. Clone that gist locally: `git clone git@gist.github.com/<gist-id>.git`
 3. `cd <gist-id>`
 4. `lein inky`. Once the server is running visit
