@@ -9,18 +9,23 @@ A ClojureScript sketchbook.
 
 ## Working on Sketches Locally
 
-Inky has a dev mode to work on sketches locally. Why? Sub-second
-recompiles and source maps.
+Inky has a dev mode to work on sketches locally. Why? Sub-second (2-3s
+now, sub-second to return shortly) recompiles and source maps.
 
-This works by cloning a gist into the `src/gists` directory, and
-visiting `localhost:5000/dev?ns=<ns>`. Specifics below:
+Just add the lein-inky plugin to your `~/.lein/profiles.clj` like so:
 
-1. Get the web-app running locally (clone project & `bin/dev`). Only
-   `$PORT` is required for local sketch work.
-2. Clone a gist into the `src/gists` directory, i.e. `cd src/gists &&
-   git clone git@gist.github.com:<gist id>.git`
-3. Visit `http://localhost:5000/dev?ns=<ns of cljs file in gist>`
-4. Changes are automatically recompiled, and reloaded in your browser.
+```bash
+{:user {:plugins [[lein-inky "0.1.4"]]}}
+```
+
+After that:
+
+1. Create a gist with a cljs file. For this example we'll call it `first.cljs`.
+2. Clone that gist locally: `git clone git@gist.github.com/<gist-id>.git`
+3. `cd <gist-id>`
+4. `lein inky`. Once the server is running visit
+   [http://localhost:4659](http://localhost:4659).
+
 
 One gotcha, for source maps to correctly resolve your file, you must
 name it after the last part of the ns. For example, if the ns if your
