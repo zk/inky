@@ -15,3 +15,4 @@ pom.xml.asc
 /resources/public/gists
 /src/scss/.sass-cache
 /.sass-cache
+/plugin/target
