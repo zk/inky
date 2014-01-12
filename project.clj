@@ -39,6 +39,7 @@
                  :init (do (require 'inky.entry)
                            (inky.entry/-main))}
   :plugins [[lein-cljsbuild "1.0.1"]] ;; required for heroku deploy
+  :jar-name "inky.jar"
   :cljsbuild {:builds
               {:dev {:source-paths ["src/cljs"]
                      :compiler {:output-to "resources/public/cljs/inky.js"

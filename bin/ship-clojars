@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+$SCRIPT_DIR/test
+
+cd $SCRIPT_DIR/.. && lein pom && lein jar && scp pom.xml target/inky.jar clojars@clojars.org:
+
+cd $SCRIPT_DIR/../plugin && lein pom && lein jar && scp pom.xml target/lein-inky.jar clojars@clojars.org:
