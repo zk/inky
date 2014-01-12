@@ -46,22 +46,6 @@
 
 (def link-re #"(([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?")
 
-(defn safe-slurp [s]
-  "Like slurp, but doesn't throw an exception when file not found."
-  (when s
-    (try
-      (slurp s)
-      (catch java.io.FileNotFoundException e nil))))
-
-(defn guess-gist-ns [root-path]
-  (->> (file-seq (java.io.File. root-path))
-       (map #(.getAbsolutePath %))
-       (filter #(.endsWith % ".cljs"))
-       first
-       safe-slurp
-       common/parse-source-meta
-       :ns))
-
 (defn format-doc [s]
   (when s
     (-> s
@@ -79,20 +63,6 @@
                hcl/head
                :status))
     (catch Exception e false)))
-
-(defn render-dev [ns]
-  (hp/html5
-    [:head]
-    [:body
-     [:div.sketch]
-     [:script {:type "text/javascript"
-               :src "/js/react-0.8.0.js"}]
-     [:script {:type "text/javascript"
-               :src "/gists/goog/base.js"}]
-     [:script {:type "text/javascript"
-               :src "/gists/gists.js"}]
-     [:script {:type "text/javascript"}
-      "goog.require(\"" ns "\");"]]))
 
 (defn $layout [{:keys [content body-class head]}]
   (hp/html5
@@ -394,9 +364,9 @@
 
   (GET "/dev" [] (fn [r]
                    (let [ns (or (-> r :params :ns)
-                                (guess-gist-ns "src/gists"))]
+                                (common/guess-gist-ns "src/gists"))]
                      (html-response
-                       (render-dev ns)))))
+                       (common/render-dev ns)))))
 
   ;; (?!)
   (GET "/:login/:gist-id" [login gist-id]

@@ -25,7 +25,7 @@
                  [com.amazonaws/aws-java-sdk "1.6.8"]
                  [tailrecursion/javelin "2.4.0"]
                  [prismatic/dommy "0.1.2"]
-                 [com.cemerick/double-check "0.5.4-SNAPSHOT"]
+                 [com.cemerick/double-check "0.5.4-20131121.073142-1"]
                  [com.keminglabs/c2 "0.2.3"]
                  [org.clojure/core.logic "0.8.5"]
                  [tailrecursion/cljson "1.0.6"]
@@ -33,11 +33,12 @@
                  [slingshot "0.10.3"]
                  [prismatic/schema "0.1.10"]
                  #_[om "0.1.0-SNAPSHOT"]
-                 [secretary "0.4.0"]]
+                 [secretary "0.4.0"]
+                 [cljsbuild "1.0.1"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
                            (inky.entry/-main))}
-  :plugins [[lein-cljsbuild "1.0.0"]] ;; required for heroku deploy
+  :plugins [[lein-cljsbuild "1.0.1"]] ;; required for heroku deploy
   :cljsbuild {:builds
               {:dev {:source-paths ["src/cljs"]
                      :compiler {:output-to "resources/public/cljs/inky.js"

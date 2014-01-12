@@ -51,7 +51,6 @@
       {:success false
        :error-cause (str e)})))
 
-
 (defn next-job!
   "Atomically grabs and locks next job by setting the `started` field
   to current time (ms)."
@@ -159,3 +158,21 @@
 
 
   )
+
+
+(defn request-compile [login gist-id]
+  (mon/insert! :compile-jobs {:login login :gist-id gist-id :created (util/now)})
+  true)
+
+#_(println (mon/with-mongo (mon/make-connection "mongodb://inky:bAf9SE3m76keJzMc59rx233v@dharma.mongohq.com:10093/inky")
+           #_(mon/drop-coll! :compile-jobs)
+           (mon/fetch :compile-jobs)
+           (doseq [gist-id (take 8 (cycle ["7981902"
+                                           "8065432"
+                                           "8048938"
+                                           "df1a783a1c6177bb6fc3"
+                                           "035d05279961a4319917"
+                                           "687828ab11871910f099"
+                                           "b302d4a42e8e081382ed"
+                                           "029a8392c4fedae6dd48"]))]
+             (request-compile "zk" gist-id))))

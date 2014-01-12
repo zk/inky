@@ -19,3 +19,19 @@
   + show compiling
 
 Check compiling first, mongo, atomic check
+
+
+<2014-01-10 Fri 21:22>
+
+* Lein plugin for compiling inky sketches
+
+Provides an easy way to edit inky sketches locally.
+
+Interface:
+
+#+begin_src bash
+git clone git@gist.github.com:687828ab11871910f099.git my-sketch
+cd my-sketch
+lein inky 4000
+# <starts server on port 4659, lein cljsbuild>
+#+end_src
