@@ -254,26 +254,25 @@
       [:section.local-dev
        [:h3 "Sketching Locally"]
        [:p
-        "We've got a lein plugin to help you bring your tools to bear on inky sketches."
-        " First, add "
-        [:code "[lein-inky \"0.1.4\"]"]
-        " to your "
-        [:code "~/.lein/profiles.clj"]
-        ". Then:"]
+        "We've got a lein plugin to help you bring your tools to bear on inky sketches. Why do this? Short compile times and source-maps."]
        [:ol
+        [:li
+         "Add "
+         [:code "[lein-inky " common/inky-version "]"]
+         " to the plugins section of your user profile in "
+         [:code "~/.lein/profiles.clj"]]
         [:li
          "Fork "
          [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]]
         [:li
          "Clone that gist locally: "
-         [:code "git clone git@gist.github.com/&lt;gist-id&gt;.git"]
-         "."]
+         [:code "git clone git@gist.github.com/&lt;gist-id&gt;.git"]]
         [:li [:code "cd &lt;gist-id&gt;"]]
         [:li "Run " [:code "lein inky"]]]
        [:p
         "You'll see something like the following output. Visit "
         [:a {:href "http://localhost:4659"} "http://localhost:4659"]
-        " and start editing your sketch w/ source maps."]
+        " and start editing your sketch."]
        [:p
         "When you're done editing, commit, push, and visit "
         [:code "http://inky.cc/&lt;github-login&gt;/&lt;gist-id&gt;"]
