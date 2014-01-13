@@ -276,7 +276,7 @@
        [:p
         "When you're done editing, commit, push, and visit "
         [:code "http://inky.cc/&lt;github-login&gt;/&lt;gist-id&gt;"]
-        " to make your sketches available online."]]
+        " to make your sketch available online."]]
       ($jobs-section data)]}))
 
 (defn squeeze
