@@ -254,7 +254,7 @@
       [:section.local-dev
        [:h3 "Sketching Locally"]
        [:p
-        "We've got a lein plugin to help you bring your tools to bear on inky sketches. Why do this? Short compile times and source-maps."]
+        "We've got a lein plugin to help you bring your tools to bear on inky sketches."]
        [:ol
         [:li
          "Add "
