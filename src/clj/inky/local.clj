@@ -145,12 +145,13 @@
       {:port port :join? false})))
 
 
+(comment
 
-(defonce ss (atom nil))
+  (defonce ss (atom nil))
 
-(defn restart []
-  (when @ss
-    (@ss))
-  (reset! ss (start-server 4658 "/Users/zk/napplelabs/tmpinky/dommytest")))
+  (defn restart []
+    (when @ss
+      (@ss))
+    (reset! ss (start-server 4658 "/Users/zk/napplelabs/tmpinky/dommytest")))
 
-(restart)
+  (restart))
