@@ -12,6 +12,8 @@
             [ring.util.mime-type :refer (ext-mime-type)]
             [clojure.java.io :refer (resource)]))
 
+(def inky-version "0.1.5")
+
 (def user-home (System/getProperty "user.home"))
 
 (defn render-dev [ns]
@@ -99,19 +101,21 @@
             cljs-dir sketch-path
             hash (util/md5 cljs-dir)
             source (common/safe-slurp cljs-path)
-            ns (-> source
-                   common/parse-source-meta
-                   :ns)]
+            source-meta (common/parse-source-meta source)
+            ns (:ns source-meta)]
         (cond
           (= "/" (:uri r))
           {:body (hp/html5
                    (rest
                      (sketch/$sketch-page
-                       {:login "NOUSER"
-                        :gist-id "NOGIST"
-                        :created (util/now)
-                        :sketch-url (str "/sketch")
-                        :source source})))
+                       (merge
+                         {:login "NOUSER"
+                          :gist-id "NOGIST"
+                          :inky-version inky-version
+                          :created (util/now)
+                          :user {:avatar-url "https://gravatar.com/avatar/53ff3f6b624b685fd3d5a9ce5630f14e?d=https%3A%2F%2Fidenticons.github.com%2Fb98d115bcae7ad72487811f5f0bce0fb.png&r=x"}
+                          :source source}
+                         source-meta))))
            :status 200}
 
           (.endsWith (:uri r) "/sketch")
@@ -140,13 +144,13 @@
       (ah/wrap-ring-handler h)
       {:port port :join? false})))
 
-(comment
 
-  (defonce ss (atom nil))
 
-  (defn restart []
-    (when @ss
-      (@ss))
-    (reset! ss (start-server 4658 "/Users/zk/napplelabs/tmpinky/dommytest")))
+(defonce ss (atom nil))
 
-  (restart))
+(defn restart []
+  (when @ss
+    (@ss))
+  (reset! ss (start-server 4658 "/Users/zk/napplelabs/tmpinky/dommytest")))
+
+(restart)
