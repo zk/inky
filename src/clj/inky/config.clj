@@ -18,13 +18,14 @@
 (def aws-s3-bucket (env/str :aws-s3-bucket))
 
 (def cljs-libs
-  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
+  [["c2" "0.2.3" "https://github.com/lynaghk/c2"]
+   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
    ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
    ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
+   ["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
    ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
    ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
-   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
-   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
+   ["schema" "0.2.0" "https://github.com/Prismatic/schema"]
    ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
 
 (def previews

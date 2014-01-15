@@ -12,7 +12,7 @@
             [ring.util.mime-type :refer (ext-mime-type)]
             [clojure.java.io :refer (resource)]))
 
-(def inky-version "0.1.5")
+(def inky-version "0.1.6")
 
 (def user-home (System/getProperty "user.home"))
 

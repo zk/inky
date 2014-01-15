@@ -15,7 +15,7 @@ now, sub-second to return shortly) recompiles and source maps.
 Just add the lein-inky plugin to your `~/.lein/profiles.clj` like so:
 
 ```bash
-{:user {:plugins [[lein-inky "0.1.5"]]}}
+{:user {:plugins [[lein-inky "0.1.6"]]}}
 ```
 
 After that:
@@ -76,6 +76,19 @@ Deploys to Heroku. Run `bin/ship`
 
 * Don't forget to bump inky's version number any time deps change
   (including dep version changes).
+
+## Bumping Versions
+
+This should be done when new cljs libs are added, or the lein plugin is updated.
+
+Places to bump:
+
+* `project.clj`
+* `plugin/project.clj` 2x
+* `README.md`
+* `src/clj/inky/local.clj`
+
+If you're adding a new lib, don't forget to add it to `inky.config/cljs-libs`.
 
 
 ## TODO

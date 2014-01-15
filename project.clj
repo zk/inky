@@ -1,4 +1,4 @@
-(defproject inky "0.1.5"
+(defproject inky "0.1.6"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -34,7 +34,8 @@
                  [prismatic/schema "0.1.10"]
                  #_[om "0.1.0-SNAPSHOT"]
                  [secretary "0.4.0"]
-                 [cljsbuild "1.0.1"]]
+                 [cljsbuild "1.0.1"]
+                 [prismatic/schema "0.2.0"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
                            (inky.entry/dev))}
