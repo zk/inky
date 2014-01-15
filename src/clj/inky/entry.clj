@@ -137,7 +137,7 @@
      :content
      [:div
       [:section.about
-       [:h3 "What?"]
+       [:h3 "About"]
        [:p
         "Inky.cc is a place to compile and host short snippets of ClojureScript, &#224; la "
         [:a {:href "http://bl.ocks.org"} "blocks"]
@@ -147,23 +147,6 @@
         [:a {:href "http://codepen.io/"} "codepen"]
         "."
         " We'll bring the environment, you bring the code."]
-       [:p
-        "We've included several cljs libraries for you to use, including "
-        (->> config/cljs-libs
-             (map (fn [[name version href]]
-                    [:code [:a {:href href} name] " (" version ")"]))
-             (interpose ", ")
-             reverse
-             ((fn [[x & rest]]
-                (concat [x] [" and "] rest)))
-             reverse)
-        "."]
-       [:p
-        "Drop me a line at "
-        [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
-        " if you'd like your library to be available to inky sketches, or open a pull request at "
-        [:a {:href "https://github.com/zk/inky"} "zk/inky"]
-        "."]
        [:p "Getting started instructions below."]]
       [:section.sketch-examples
        [:h3 "Recent Sketches"]
@@ -186,7 +169,11 @@
       [:section.local-dev
        [:h3 "Sketching Locally"]
        [:p
-        "We've got a lein plugin to help you bring your tools to bear on inky sketches."]
+        "Compiling a sketch takes a loooooong time, because CPU isn't cheap.
+         This works for posting your finished sketches, but is much
+         too long for development. We've got a lein plugin which will
+         allow you to work locally -- with much faster compile times,
+         source-maps, and all your Clojure tooling."]
        [:ol
         [:li
          "Add "
@@ -202,13 +189,33 @@
         [:li [:code "cd &lt;gist-id&gt;"]]
         [:li "Run " [:code "lein inky"]]]
        [:p
-        "You'll see something like the following output. Visit "
-        [:a {:href "http://localhost:4659"} "http://localhost:4659"]
+        "Visit "
+        [:a {:href "http://localhost:4659"}
+         "http://localhost:4659"]
         " and start editing your sketch."]
        [:p
-        "When you're done editing, commit, push, and visit "
+        "When you're done editing, commit, push to GitHub, and visit "
         [:code "http://inky.cc/&lt;github-login&gt;/&lt;gist-id&gt;"]
-        " to make your sketch available online."]]
+        " to make your sketch available on the tubes."]]
+      [:section.libs
+       [:h3 "Libs"]
+       [:p
+        "We've included several cljs libraries for you to use, including "
+        (->> config/cljs-libs
+             (map (fn [[name version href]]
+                    [:code [:a {:href href} name] " (" version ")"]))
+             (interpose ", ")
+             reverse
+             ((fn [[x & rest]]
+                (concat [x] [" and "] rest)))
+             reverse)
+        "."]
+       [:p
+        "Drop me a line at "
+        [:a {:href "https://twitter.com/heyzk"} "@heyzk"]
+        " if you'd like your library to be available to inky sketches, or open a pull request at "
+        [:a {:href "https://github.com/zk/inky"} "zk/inky"]
+        "."]]
       ($jobs-section data)]}))
 
 (defn request-compile [login gist-id]
