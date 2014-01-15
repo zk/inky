@@ -15,7 +15,7 @@ now, sub-second to return shortly) recompiles and source maps.
 Just add the lein-inky plugin to your `~/.lein/profiles.clj` like so:
 
 ```bash
-{:user {:plugins [[lein-inky "0.1.4"]]}}
+{:user {:plugins [[lein-inky "0.1.5"]]}}
 ```
 
 After that:
