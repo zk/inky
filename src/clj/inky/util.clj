@@ -80,3 +80,27 @@
 
 (defn uuid []
   (str (java.util.UUID/randomUUID)))
+
+(defn url-encode [s]
+  (when s
+    (java.net.URLEncoder/encode s)))
+
+(defn squeeze
+  "Ellipses the middle of a long string."
+  [n s]
+  (let [n (max (- n 3) 0)]
+    (cond
+      (< (count s) n) s
+      :else (let [len (count s)
+                  half-len (int (/ len 2))
+                  to-take-out (- len n)
+                  half-take-out (int (/ to-take-out 2))
+                  first-half (take half-len s)
+                  second-half (drop half-len s)]
+              (str (->> first-half
+                        (take (- half-len half-take-out))
+                        (apply str))
+                   "..."
+                   (->> second-half
+                        (drop half-take-out)
+                        (apply str)))))))

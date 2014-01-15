@@ -37,7 +37,7 @@
                  [cljsbuild "1.0.1"]]
   :repl-options {:port 7888
                  :init (do (require 'inky.entry)
-                           (inky.entry/-main))}
+                           (inky.entry/dev))}
   :plugins [[lein-cljsbuild "1.0.1"]] ;; required for heroku deploy
   :jar-name "inky.jar"
   :cljsbuild {:builds

@@ -1,4 +1,4 @@
-g(ns inky.entry
+(ns inky.entry
   (:use [ring.middleware
          file
          file-info
@@ -20,9 +20,10 @@ g(ns inky.entry
             [clojure.string :as str]
             [clj-http.client :as hcl]
             [inky.compile :as comp]
+            [inky.worker :as worker]
             [inky.s3 :as s3]
             [inky.util :as util]
-            [inky.worker :as worker]
+            [inky.sketch :as sketch]
             [clojure.java.shell :as sh]
             [clojure.edn :as edn]
             [somnium.congomongo :as mon]))
@@ -52,64 +53,17 @@ g(ns inky.entry
       (merge (with-meta (response "") (meta resp-map))
              resp-map))))
 
-(defn url-encode [s]
-  (when s
-    (java.net.URLEncoder/encode s)))
-
-(defn in-s3? [hash]
-  (try
-    (= 200 (-> (str "http://f.inky.cc/" hash "/meta.edn")
-               hcl/head
-               :status))
-    (catch Exception e false)))
-
-(defn render-compiling []
-  (common/$layout
-    {:head [[:meta {:http-equiv "refresh" :content "6"}]]
-     :body-class "compiling-page"
-     :content [:div
-               [:h1 "Compiling!"]
-               [:p "This should take less than 30 seconds, so sit tight and we'll load the results, automatically, when they're ready."]
-               [:p "Results are cached for subsequent loads."]
-               [:div.box.animate]]}))
-
 (defn in-progress? [hash]
-  (mon/fetch-one :compile-jobs :where {:gist-id hash
-                                       :succeeded nil
-                                       :failed nil}))
+  (mon/fetch-one :compile-jobs
+    :where {:gist-id hash
+            :succeeded nil
+            :failed nil}))
 
 (defn html-response [body & [opts]]
   (merge
     opts
     {:headers {"Content-Type" "text/html; utf-8"}
      :body body}))
-
-(def previews
-  [["almost.haiku"
-    "@heyzk"
-    "zk/8065432"
-    "http://f.inky.cc.s3.amazonaws.com/top-examples/haiku.jpg"]
-   ["tenk.k.processes.redux"
-    "@heyzk"
-    "/zk/7981870"
-    "http://f.inky.cc.s3.amazonaws.com/top-examples/tenkredux.jpg"]
-   ["instagram.api"
-    "@heyzk"
-    "/zk/8048938"
-    "http://f.inky.cc.s3.amazonaws.com/top-examples/instagram.jpg"]
-   ["first"
-    "@heyzk"
-    "/zk/7981902"
-    "http://f.inky.cc.s3.amazonaws.com/top-examples/first.jpg"]])
-
-(defn $sketch-preview [[name author-twitter inky-path image-url]]
-  [:li.sketch-preview
-   [:div.sketch-meta
-    [:strong name]
-    " by "
-    [:a {:href (str "https://twitter.com/" author-twitter)} author-twitter]]
-   [:a {:href inky-path}
-    [:img {:src image-url}]]])
 
 (defn compiling-job? [job]
   (and (:started job)
@@ -168,6 +122,15 @@ g(ns inky.entry
      [:div.null-state
       "No jobs."])])
 
+(defn $sketch-preview [[name author-twitter inky-path image-url]]
+  [:li.sketch-preview
+   [:div.sketch-meta
+    [:strong name]
+    " by "
+    [:a {:href (str "https://twitter.com/" author-twitter)} author-twitter]]
+   [:a {:href inky-path}
+    [:img {:src image-url}]]])
+
 (defn $intro [data]
   (common/$layout
     {:body-class :intro-page
@@ -186,7 +149,7 @@ g(ns inky.entry
         " We'll bring the environment, you bring the code."]
        [:p
         "We've included several cljs libraries for you to use, including "
-        (->> common/cljs-libs
+        (->> config/cljs-libs
              (map (fn [[name version href]]
                     [:code [:a {:href href} name] " (" version ")"]))
              (interpose ", ")
@@ -205,7 +168,7 @@ g(ns inky.entry
       [:section.sketch-examples
        [:h3 "Recent Sketches"]
        [:ul
-        (map $sketch-preview previews)]]
+        (map $sketch-preview config/previews)]]
       [:section.instructions
        [:h3 "Compiling Your Sketches"]
        [:p
@@ -248,66 +211,32 @@ g(ns inky.entry
         " to make your sketch available online."]]
       ($jobs-section data)]}))
 
-(defn squeeze
-  "Ellipses the middle of a long string."
-  [n s]
-  (let [n (max (- n 3) 0)]
-    (cond
-      (< (count s) n) s
-      :else (let [len (count s)
-                  half-len (int (/ len 2))
-                  to-take-out (- len n)
-                  half-take-out (int (/ to-take-out 2))
-                  first-half (take half-len s)
-                  second-half (drop half-len s)]
-              (str (->> first-half
-                        (take (- half-len half-take-out))
-                        (apply str))
-                   "..."
-                   (->> second-half
-                        (drop half-take-out)
-                        (apply str)))))))
-
-
-
-(defn render-error [& body]
-  (common/$layout
-    {:content body}))
-
 (defn request-compile [login gist-id]
   (mon/insert! :compile-jobs {:login login :gist-id gist-id :created (util/now)})
   true)
 
-
 (def $four-oh-four
-  (hp/html5
-    [:head
-     [:title "404 | inky.cc"]
-     (util/$style
-       [:body {:font-family "'Helvetica Neue', Arial, sans-serif"
-               :padding-top "50px"
-               :color "#555"}
-        :h1 {:font-size "60px"
-             :text-align "center"
-             :font-weight "300"}
-        :a {:color "#428bca"
-            :text-decoration "none"}
-        :a:hover {:color "#2a6496"}])]
-    [:body
-     [:h1 "404 | " [:a {:href "/"} "inky.cc"]]]))
+  [:html5
+   [:head
+    [:title "404 | inky.cc"]
+    (util/$style
+      [:body {:font-family "'Helvetica Neue', Arial, sans-serif"
+              :padding-top "50px"
+              :color "#555"}
+       :h1 {:font-size "60px"
+            :text-align "center"
+            :font-weight "300"}
+       :a {:color "#428bca"
+           :text-decoration "none"}
+       :a:hover {:color "#2a6496"}])]
+   [:body
+    [:h1 "404 | " [:a {:href "/"} "inky.cc"]]]])
 
 (defroutes _routes
   (GET "/" [] (fn [r]
-                (html-response
-                  ($intro {:jobs (mon/fetch :compile-jobs
-                                   :sort {:created -1}
-                                   :limit 10)}))))
-
-  (GET "/dev" [] (fn [r]
-                   (let [ns (or (-> r :params :ns)
-                                (common/guess-gist-ns "src/gists"))]
-                     (html-response
-                       (common/render-dev ns)))))
+                ($intro {:jobs (mon/fetch :compile-jobs
+                                 :sort {:created -1}
+                                 :limit 10)})))
 
   ;; (?!)
   (GET "/:login/:gist-id" [login gist-id]
@@ -328,16 +257,16 @@ g(ns inky.entry
         (cond
           compiling? (if recompile?
                        (redirect (str "/" login "/" gist-id))
-                       (html-response (render-compiling)))
+                       (sketch/$compiling-page))
           compile? (do (request-compile login gist-id)
                        (redirect (str "/" login "/" gist-id)))
-          :else (html-response (common/sketch-page login gist-id sketch-meta))))))
+          :else (html-response (sketch/$sketch-page sketch-meta))))))
 
   (GET "/:login/:gist-id/sketch" [login gist-id]
     (fn [r]
       (common/render-compiled gist-id)))
 
-  (GET "/show-compiling" [] (render-compiling))
+  (GET "/show-compiling" [] (sketch/$compiling-page))
 
   (not-found $four-oh-four))
 
@@ -363,6 +292,19 @@ g(ns inky.entry
 (defn -main []
   (try
     (mon/set-connection! (mon/make-connection config/mongo-url))
+    (start-http-server
+      (var routes)
+      {:port config/port :join? false})
+    (println (format "Server running on port %d" config/port))
+    (catch Exception e
+      (println e)
+      (.printStackTrace e)
+      (throw e))))
+
+(defn dev []
+  (try
+    (mon/set-connection! (mon/make-connection config/mongo-url))
+    (worker/spawn 1)
     (start-http-server
       (var routes)
       {:port config/port :join? false})
