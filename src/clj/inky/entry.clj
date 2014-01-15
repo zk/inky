@@ -1,4 +1,4 @@
-(ns inky.entry
+g(ns inky.entry
   (:use [ring.middleware
          file
          file-info
@@ -11,10 +11,11 @@
         [ring.middleware.session.cookie :only (cookie-store)]
         [ring.util.response :only (response content-type redirect)])
   (:require [aleph.http :as ah]
-            [inky.env :as env]
+            [inky.config :as config]
             [inky.common :as common]
             [compojure.core :refer (defroutes GET)]
             [compojure.route :refer (not-found)]
+            [compojure.response :refer (Renderable render)]
             [hiccup.page :as hp]
             [clojure.string :as str]
             [clj-http.client :as hcl]
@@ -26,32 +27,30 @@
             [clojure.edn :as edn]
             [somnium.congomongo :as mon]))
 
-(def cljs-libs
-  [["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
-   ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
-   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
-   ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
-   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
-   ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
-   ["c2" "0.2.3" "https://github.com/lynaghk/c2"]
-   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
+;; Extend hiccup to support rendering of hiccup vectors
+;; Allows (GET "/" [] (fn [req] [:html5 [:body [:h1 "hello world"]]]))
+;;
+;; Nice for removing hiccup as a dependency from most html-generating code.
 
-(def ga-tag
-  [:script (str "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', '" (env/str :ga-tracking-id) "', '" (env/str :ga-tracking-host) "');
-  ga('send', 'pageview');")])
+(defn hiccup->html-string [body]
+  (if-not (vector? body)
+    body
+    (let [bodys (if (= :html5 (first body))
+                  (rest body)
+                  [body])]
+      (hp/html5 bodys))))
 
-(def link-re #"(([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?")
+(extend-protocol Renderable
+  clojure.lang.PersistentVector
+  (render [v request]
+    (render (hiccup->html-string v) request))
 
-(defn format-doc [s]
-  (when s
-    (-> s
-        (str/replace link-re (fn [[href & rest]]
-                               (str "<a href=\"" href "\">" href "</a>")))
-        (str/replace #"\n\n" "<br /><br />"))))
+  clojure.lang.APersistentMap
+  (render [resp-map _]
+    (if (-> resp-map :body vector?)
+      (assoc resp-map :body (-> resp-map :body hiccup->html-string))
+      (merge (with-meta (response "") (meta resp-map))
+             resp-map))))
 
 (defn url-encode [s]
   (when s
@@ -64,38 +63,8 @@
                :status))
     (catch Exception e false)))
 
-(defn $layout [{:keys [content body-class head]}]
-  (hp/html5
-    (-> [:head
-         [:meta {:name "viewport" :content "width=768px"}]
-         [:link {:rel :stylesheet :href "http://fonts.googleapis.com/css?family=PT+Serif" :type "text/css"}]
-         [:link {:rel :stylesheet :href "/css/app.css"}]]
-        (concat head)
-        vec)
-    [:body
-     (when body-class
-       {:class body-class})
-     [:div.sticky-footer-wrap
-      [:div.container
-       [:div.row
-        [:div.col-sm-12
-         [:div.row
-          [:header.navbar
-           [:div
-            [:a.navbar-brand {:href "/"}
-             [:i.icon-rocket] "inky.cc"]
-            [:span.navbar-text "/ sketch in cljs"]]]
-          [:div.col-sm-12
-           content]]]]]]
-     [:footer
-      [:div.container
-       [:div.row
-        [:div.col-sm-121
-         "inky.cc is brought to you by "
-         [:a {:href "https://twitter.com/heyzk"} "@heyzk"]]]]]ga-tag]))
-
 (defn render-compiling []
-  ($layout
+  (common/$layout
     {:head [[:meta {:http-equiv "refresh" :content "6"}]]
      :body-class "compiling-page"
      :content [:div
@@ -200,7 +169,7 @@
       "No jobs."])])
 
 (defn $intro [data]
-  ($layout
+  (common/$layout
     {:body-class :intro-page
      :content
      [:div
@@ -217,7 +186,7 @@
         " We'll bring the environment, you bring the code."]
        [:p
         "We've included several cljs libraries for you to use, including "
-        (->> cljs-libs
+        (->> common/cljs-libs
              (map (fn [[name version href]]
                     [:code [:a {:href href} name] " (" version ")"]))
              (interpose ", ")
@@ -299,68 +268,10 @@
                         (drop half-take-out)
                         (apply str)))))))
 
-(defn sketch-page [login gist-id {:keys [doc ns created url user source inky-version compile-res]}]
-  (let [main-url (str "/" login "/" gist-id)
-        sketch-url (str "/" login "/" gist-id "/sketch")
-        gist-url (str "https://gist.github.com/" login "/" gist-id)
-        user-url (str "https://github.com/" login)]
-    ($layout
-      {:body-class :sketch-page
-       :content
-       [:body
-        [:div.wrapper
-         [:section
-          [:h1 ns]
-          [:p (format-doc doc)]]
-         (if-not (:success compile-res)
-           [:section.compile-failed
-            [:h2 "Ruh-Roh, compile failed:"]
-            [:p [:a {:href (str main-url "?recompile=true")} "Click here"] " to recompile. You can also re-run compilation by setting query param " [:code "recompile=true"] " on this page."]
-            [:pre
-             "# Compilation result:\n\n"
-             (util/pp-str compile-res)]]
-           [:section
-            [:div.iframe-container
-             [:iframe {:src sketch-url :scrolling "no"}]]
-            [:div.controls
-             [:a {:href gist-url} "fork this sketch"]
-             " / "
-             [:a {:href sketch-url} "full-screen"]]
-            [:div.sketch-meta
-             [:a {:href user-url}
-              [:img.avatar {:src (:avatar-url user)}]]
-             [:span.author "By "
-              [:a {:href user-url} login]
-              ". "]
-             [:span.compile-info
-              "Compiled "
-              "with "
-              [:span.version "inky v" (or inky-version "DONNO")]
-              " from "
-              [:span.gist-id
-               "gist "
-               [:a {:href gist-url} gist-id]]
-              ", "
-              [:span.created
-               (if (< (util/ms-since created) (* 1000 60 60 24))
-                 (str  (util/timeago created) " ago")
-                 (str "on " (util/format-ms created "MMM dd, yyyy")))]
-              "."]]])
-         [:section
-          [:pre {:class "brush: clojure"}
-           (when source
-             (-> source
-                 (str/replace #">" "&gt;")
-                 (str/replace #"<" "&lt;")))]]
-         [:script {:type "text/javascript"}
-          (str
-            (slurp "syntaxhighlighterclj.js") ";"
-            "SyntaxHighlighter.defaults.toolbar=false;"
-            "SyntaxHighlighter.defaults.gutter=true;"
-            "SyntaxHighlighter.all();")]]]})))
+
 
 (defn render-error [& body]
-  ($layout
+  (common/$layout
     {:content body}))
 
 (defn request-compile [login gist-id]
@@ -420,7 +331,7 @@
                        (html-response (render-compiling)))
           compile? (do (request-compile login gist-id)
                        (redirect (str "/" login "/" gist-id)))
-          :else (html-response (sketch-page login gist-id sketch-meta))))))
+          :else (html-response (common/sketch-page login gist-id sketch-meta))))))
 
   (GET "/:login/:gist-id/sketch" [login gist-id]
     (fn [r]
@@ -451,13 +362,11 @@
 
 (defn -main []
   (try
-    (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
-    (let [port (env/int :port 8080)]
-      (worker/spawn (env/int :num-workers 2))
-      (start-http-server
-        (var routes)
-        {:port port :join? false})
-      (println (format "Server running on port %d" port)))
+    (mon/set-connection! (mon/make-connection config/mongo-url))
+    (start-http-server
+      (var routes)
+      {:port config/port :join? false})
+    (println (format "Server running on port %d" config/port))
     (catch Exception e
       (println e)
       (.printStackTrace e)

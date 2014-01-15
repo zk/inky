@@ -7,7 +7,8 @@
             [cljsbuild.compiler :as cbc]
             [hiccup.page :as hp]
             [ring.middleware.file-info :refer (wrap-file-info)]
-            [ring.middleware.file :refer (wrap-file)]))
+            [ring.middleware.file :refer (wrap-file)]
+            [clojure.java.io :refer (resource)]))
 
 (def user-home (System/getProperty "user.home"))
 
@@ -84,11 +85,21 @@
     (let [cljs-path (cljs-file-path-in sketch-path)
           cljs-dir sketch-path
           hash (util/md5 cljs-dir)
-          ns (-> cljs-path
-                 common/safe-slurp
+          source (common/safe-slurp cljs-path)
+          ns (-> source
                  common/parse-source-meta
                  :ns)]
-      (if (= "/" (:uri r))
+      (cond
+        (= "/" (:uri r))
+        {:body (common/sketch-page
+                 {:login "NOUSER"
+                  :gist-id "NOGIST"
+                  :created (util/now)
+                  :sketch-url (str "/sketch")
+                  :source source})
+         :status 200}
+
+        (= "/sketch" (:uri r))
         (do
           (let [compile-res (compile-cljs hash cljs-dir @mtimes)]
             (when (:success compile-res)
@@ -96,11 +107,22 @@
           {:headers {"Content-Type" "text/html"}
            :body (render-dev ns)
            :status 200})
-        (let [res ((-> (fn [r] {:body ""})
-                       (wrap-file (str user-home "/.inky.cc/" hash))
-                       wrap-file-info)
-                   r)]
-          res)))))
+
+        (= "/css/app.css" (:uri r))
+        {:headers {"Content-Type" "text/css"}
+         :status 200
+         :body (slurp (resource "public/css/app.css"))}
+
+        (= "/js/syntaxhighlighterclj.js" (:uri r))
+        {:headers {"Content-Type" "text/javascript"}
+         :status 200
+         :body (slurp (resource "public/js/syntaxhighlighterclj.js"))}
+
+        :else (let [res ((-> (fn [r] {:body ""})
+                             (wrap-file (str user-home "/.inky.cc/" hash))
+                             wrap-file-info)
+                         r)]
+                res)))))
 
 (defn start-server [port sketch-path]
   (let [h (handler sketch-path)]
@@ -108,14 +130,11 @@
       (ah/wrap-ring-handler h)
       {:port port :join? false})))
 
-(comment
 (defonce ss (atom nil))
 
 (defn restart []
   (when @ss
     (@ss))
-  (reset! ss (start-server 4658 "/Users/zk/napplelabs/tmpinky/8189314")))
+  (reset! ss (start-server 4658 "/Users/zk/napplelabs/tmpinky/dommytest")))
 
 (restart)
-
-  )

@@ -6,15 +6,15 @@
             [inky.common :as common]
             [slingshot.slingshot :refer (try+)]
             [clj-http.client :as hcl]
-            [inky.env :as env]
+            [inky.config :as config]
             [inky.s3 :as s3]
             [clojure.java.shell :as sh]))
 
 (defn gist-data [gist-id]
   (try+
     (let [resp (hcl/get (str "https://api.github.com/gists/" gist-id)
-                 {:query-params {:client_id (env/str :gh-client-id)
-                                 :client_secret (env/str :gh-client-secret)}})]
+                 {:query-params {:client_id config/gh-client-id
+                                 :client_secret config/gh-client-secret}})]
       (let [body (->> resp
                       :body
                       util/from-json)

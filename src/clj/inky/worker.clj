@@ -1,6 +1,6 @@
 (ns inky.worker
   (:require [inky.compile :as comp]
-            [inky.env :as env]
+            [inky.config :as config]
             [somnium.congomongo :as mon]))
 
 (defn spawn [num-workers]
@@ -17,5 +17,5 @@
               (.printStackTrace e))))))))
 
 (defn -main []
-  (mon/set-connection! (mon/make-connection (env/str :mongo-url "mongodb://localhost:27017/inky")))
-  (spawn (env/int :num-workers 2)))
+  (mon/set-connection! (mon/make-connection config/mongo-url))
+  (spawn config/num-workers))
