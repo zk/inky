@@ -131,6 +131,59 @@
    [:a {:href inky-path}
     [:img {:src image-url}]]])
 
+(defn $getting-started []
+  (common/$layout
+    {:body-class :getting-started-page
+     :content
+     [:div
+      [:h3 "Getting Started"]
+      [:p
+       "We'll assume you've got the JDK and "
+       [:a {:href "http://leiningen.org"} "Leningen"]
+       " installed and available on your "
+       [:code "$PATH"]
+       ", and a "
+       [:a {:href "https://github.com"} "GitHub"]
+       " account."]
+      [:h4 "Step 1: Fork &amp; Clone"]
+      [:p
+       "Inky sketches are gist-backed. This is a great thing, in that sketches are "
+       "forkable, so you can easily build on existing skeches, and "
+       "cloneable, so you can author locally, using your tools."]
+      [:p "We're going to do both of these now."]
+      [:ol
+       [:li
+        "Fork "
+        [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]
+        " and copy the gist id, which looks something like this: " [:code "8065432"] "."]
+       [:li
+        "Clone your new gists' repo. For example, assuming the gist id above: "
+        [:code "git clone git@gist.github.com:8065432.git inkystarter"]
+        "."]
+       [:li [:code "cd inkystarter"]]]
+      [:h4 "Step 2: Add the Inky Leiningen Plugin"]
+      [:p "Leiningen allows you globally add functionality, like (surprise) compiling Inky sketches, by adding a file to your home directory."]
+      [:ol
+       [:li
+        "Create or edit "
+        [:code "~/.lein/profiles.clj"]]
+       [:li
+        "Add "
+        [:code "[lein-inky " common/inky-version "]"]
+        " to the plugins section. Your " [:code "profiles.clj"] " like so:"
+        [:br] [:br]
+        [:pre
+         "# ~/.lein/profiles.clj
+
+ {:user {:plugins [[lein-inky \"" common/inky-version "\"]]}}"]]]
+      [:h4 "Step 3: Run the Plugin"]
+      [:p
+       "Back in your terminal, run "
+       [:code "lein inky"]
+       ", and visit "
+       [:a {:href "http://localhost:4659"} "http://localhost:4659"]
+       "."]]}))
+
 (defn $intro [data]
   (common/$layout
     {:body-class :intro-page
@@ -146,14 +199,9 @@
         ", and "
         [:a {:href "http://codepen.io/"} "codepen"]
         "."
-        " We'll bring the environment, you bring the code."]
-       [:p "Getting started instructions below."]]
-      [:section.sketch-examples
-       [:h3 "Recent Sketches"]
-       [:ul
-        (map $sketch-preview config/previews)]]
+        " We'll bring the environment, you bring the code."]]
       [:section.instructions
-       [:h3 "Compiling Your Sketches"]
+       [:h3 "How-To: The Short Version"]
        [:p
         "Sketches are "
         [:a {:href "https://gist.github.com"} "gist"]
@@ -161,11 +209,22 @@
        [:div.instructions-list
         [:ol
          [:li
-          "Visit "
+          "Create a gist that contains a single "
+          [:code "cljs"]
+          " file, then visit "
           [:code "inky.cc/:gh-login/:gist-id"]
-          ". This will compile the provided source and redirect you to the resulting sketch."]
+          "."]
          [:li "???"]
-         [:li "Profit"]]]]
+         [:li "Profit"]]]
+       [:p
+        "There's also a slightly longer "
+        [:a {:href "/getting-started"}
+         "getting started tutorial"]
+        "."]]
+      [:section.sketch-examples
+       [:h3 "Recent Sketches"]
+       [:ul
+        (map $sketch-preview config/previews)]]
       [:section.local-dev
        [:h3 "Sketching Locally"]
        [:p
@@ -245,10 +304,13 @@
                                  :sort {:created -1}
                                  :limit 10)})))
 
+  (GET "/getting-started" [] (fn [r]
+                               ($getting-started)))
+
   ;; (?!)
   (GET "/:login/:gist-id" [login gist-id]
     (fn [r]
-      (let [;; s3 unavailable + missing meta handleded as the same, tease apart
+      (let [ ;; s3 unavailable + missing meta handleded as the same, tease apart
             sketch-meta (try
                           (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
                                edn/read-string)
