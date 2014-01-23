@@ -157,10 +157,10 @@
         [:li
          "Fork "
          [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]
-         " and note the gist id, which looks something like this: " [:code "8065432"] "."]
+         " and note the gist id (the last part of the URL's path), which looks something like this: " [:code "8108564"] "."]
         [:li
          "Clone your new gists' repo. For example, assuming the gist id above: "
-         [:code "git clone git@gist.github.com:8065432.git inkystarter"]
+         [:code "git clone git@gist.github.com:&lt;your-gist-id&gt;.git inkystarter"]
          "."]
         [:li [:code "cd inkystarter"]]]]
       [:section
