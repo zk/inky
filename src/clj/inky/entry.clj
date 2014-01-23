@@ -215,7 +215,7 @@
        [:p "You'll be redireted to the compiled sketch's page, and now it's ready to be viewed and linked to from READMEs, blogposts, tweets, etc."]]
       [:section
        [:h4 "Recompiling Sketches"]
-       [:p "Tack a " [:code "recompile=true"] " on to the end of the sketch URL to force a recompile, such as when you've updated the gist's code."]]
+       [:p "Tack a " [:code "recompile=true"] " on to the end of the sketch URL to force a recompile. Useful when you've updated the gist's code and want to post the new version."]]
       [:section
        [:h4 "Done!"]
        [:p "We hope this tutorial has been helpful in getting you up-and-running, and in explaining a little bit about how inky works. If you have an idea on how to improve this tutorial, please "
@@ -240,7 +240,7 @@
         [:a {:href "http://codepen.io/"} "codepen"]
         "."
         " We'll bring the environment, you bring the code."]
-       [:p "We believe that access to example code is an important part of a language's ecosystem, and inky aims to help with that, in some small way, for ClojureScript."]]
+       [:p "We believe that access to example code is an important part of a language's ecosystem. Inky aims to help with that, in some small way, for ClojureScript."]]
       [:section.instructions
        [:h3 "How-To: The Short Version"]
        [:div.instructions-list
