@@ -164,7 +164,7 @@
          "."]
         [:li [:code "cd inkystarter"]]]]
       [:section
-       [:h4 "Step 2: Add the Inky Leiningen Plugin"]
+       [:h4 "Step 2: Add the Inky Leiningen Plugin to your Lein Profile"]
        [:p "Leiningen allows you globally add functionality, like (surprise!) the ability to compile inky sketches, by adding a specific file to your home directory. We're going to add the lein-inky plugin to this file, which will allow you to compile sketches locally and view them in the same way they'll appear on the site."]
        [:ol
         [:li
@@ -172,7 +172,7 @@
          [:code "~/.lein/profiles.clj"]]
         [:li
          "Add "
-         [:code "[lein-inky " common/inky-version "]"]
+         [:code "[lein-inky \"" common/inky-version "\"]"]
          " to the plugins section. Your " [:code "profiles.clj"] " should look something like:"
          [:br] [:br]
          [:pre
