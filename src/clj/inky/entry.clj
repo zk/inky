@@ -136,53 +136,93 @@
     {:body-class :getting-started-page
      :content
      [:div
-      [:h3 "Getting Started"]
-      [:p
-       "We'll assume you've got the JDK and "
-       [:a {:href "http://leiningen.org"} "Leningen"]
-       " installed and available on your "
-       [:code "$PATH"]
-       ", and a "
-       [:a {:href "https://github.com"} "GitHub"]
-       " account."]
-      [:h4 "Step 1: Fork &amp; Clone"]
-      [:p
-       "Inky sketches are gist-backed. This is a great thing, in that sketches are "
-       "forkable, so you can easily build on existing skeches, and "
-       "cloneable, so you can author locally, using your tools."]
-      [:p "We're going to do both of these now."]
-      [:ol
-       [:li
-        "Fork "
-        [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]
-        " and copy the gist id, which looks something like this: " [:code "8065432"] "."]
-       [:li
-        "Clone your new gists' repo. For example, assuming the gist id above: "
-        [:code "git clone git@gist.github.com:8065432.git inkystarter"]
-        "."]
-       [:li [:code "cd inkystarter"]]]
-      [:h4 "Step 2: Add the Inky Leiningen Plugin"]
-      [:p "Leiningen allows you globally add functionality, like (surprise) compiling Inky sketches, by adding a file to your home directory."]
-      [:ol
-       [:li
-        "Create or edit "
-        [:code "~/.lein/profiles.clj"]]
-       [:li
-        "Add "
-        [:code "[lein-inky " common/inky-version "]"]
-        " to the plugins section. Your " [:code "profiles.clj"] " like so:"
-        [:br] [:br]
-        [:pre
-         "# ~/.lein/profiles.clj
+      [:section
+       [:h3 "Getting Started / Overview"]
+       [:p
+        "We'll assume you've got the JDK and "
+        [:a {:href "http://leiningen.org"} "Leningen"]
+        " installed and available on your "
+        [:code "$PATH"]
+        ", and a "
+        [:a {:href "https://github.com"} "GitHub"]
+        " account."]
+       [:p "By end of this tutorial you'll have created and uploaded your first inky sketch."]]
+      [:section
+       [:h4 "Step 1: Fork &amp; Clone"]
+       [:p
+        "Inky sketches are gist-backed, which give us two distinct benefits:  "
+        "1) sketches are forkable, so you can easily build on existing skeches, and "
+        "2) sketches are cloneable, so you can use your tools to author locally. We're going to do both of these now"]
+       [:ol
+        [:li
+         "Fork "
+         [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]
+         " and note the gist id, which looks something like this: " [:code "8065432"] "."]
+        [:li
+         "Clone your new gists' repo. For example, assuming the gist id above: "
+         [:code "git clone git@gist.github.com:8065432.git inkystarter"]
+         "."]
+        [:li [:code "cd inkystarter"]]]]
+      [:section
+       [:h4 "Step 2: Add the Inky Leiningen Plugin"]
+       [:p "Leiningen allows you globally add functionality, like (surprise!) the ability to compile inky sketches, by adding a specific file to your home directory. We're going to add the lein-inky plugin to this file, which will allow you to compile sketches locally and view them in the same way they'll appear on the site."]
+       [:ol
+        [:li
+         "Create or edit "
+         [:code "~/.lein/profiles.clj"]]
+        [:li
+         "Add "
+         [:code "[lein-inky " common/inky-version "]"]
+         " to the plugins section. Your " [:code "profiles.clj"] " should look something like:"
+         [:br] [:br]
+         [:pre
+          "# ~/.lein/profiles.clj
 
- {:user {:plugins [[lein-inky \"" common/inky-version "\"]]}}"]]]
-      [:h4 "Step 3: Run the Plugin"]
-      [:p
-       "Back in your terminal, run "
-       [:code "lein inky"]
-       ", and visit "
-       [:a {:href "http://localhost:4659"} "http://localhost:4659"]
-       "."]]}))
+ {:user {:plugins [[lein-inky \"" common/inky-version "\"]]}}"]]]]
+      [:section
+       [:h4 "Step 3: Run the Plugin"]
+       [:p
+        "We provide a local editing experience because, on the server, compiles take way too long to support a short feedback loop (cloud CPU ain't cheap). Local recompile happens on reload, and takes around 2 second (as of this writing). Getting that down to cljsbuild levels is a high priority."]
+       [:p
+        "Back in your terminal, run "
+        [:code "lein inky"]
+        ", and visit "
+        [:a {:href "http://localhost:4659"} "http://localhost:4659"]
+        ". "
+        "The page will load and your sketch will begin to compile. While the page load immediately, the sketch takes a bit to compile the first time (~15s on my machine). Subsequent compiles are much faster (~2s)."]
+       [:p "You should see something like this:"]
+       [:img {:src "/img/inkystarter-first-compile.jpg"}]]
+      [:section
+       [:h4 "Step 4: Edit, Reload, Repeat"]
+       [:p "Next, open up " [:code "inkystarter.cljs"] " and change the "
+        [:code "\"Hello World\""]
+        " text on line 12 to something else. Perhaps "
+        [:code "\"Woot!\""]
+        "suits your fancy?"]
+       [:p "Save your code, and reload the browser. Again, the page loads instantly, but the sketch takes a second or two."]
+       [:img {:src "/img/inkystarter-second-compile.jpg"}]
+       [:p "The template " [:code "require"] "s the " [:code "inky.sketch"] " namespace, which contains two sketch helper functions:"]
+       [:ul
+        [:li [:code "inky.sketch/page-style!"] " provides a nice way to apply css rules to your sketch using Clojure data structures, similar to the way HTML is generated using hiccup-style syntax. This function takes a map of selectors -> map of rules."]
+        [:li [:code "inky.sketch/content!"] " takes a hiccup-style data structure and appends it to the root div in the sketch, which has class " [:code "sketch"] "."]]
+       [:p "You don't have to use any of this, of course, it's perfectly fine to use a different mechanism to interact with the environment."]]
+      [:section
+       [:h4 "Step 5: Upload and Compile Your Sketch"]
+       [:p "Once you're done, commit your changes and push to the server. You can specify a commit message, or not, as they're not as important as with normal GitHub repos."]
+       [:p "Next, visit " [:code "http://inky.cc/:gh-login/:gist-id"] ", where " [:code ":gh-login"] " is your username, and " [:code ":gist-id"] " is the gist id from above."]
+       [:p "If this is the first time you're compiling your sketch on the server, compilation will start automatically, and you'll se a screen similar to:"]
+       [:img {:src "/img/inkystarter-compiling.jpg"}]
+       [:p "You'll be redireted to the compiled sketch's page, and now it's ready to be viewed and linked to from READMEs, blogposts, tweets, etc."]]
+      [:section
+       [:h4 "Recompiling Sketches"]
+       [:p "Tack a " [:code "recompile=true"] " on to the end of the sketch URL to force a recompile, such as when you've updated the gist's code."]]
+      [:section
+       [:h4 "Done!"]
+       [:p "We hope this tutorial has been helpful in getting you up-and-running, and in explaining a little bit about how inky works. If you have an idea on how to improve this tutorial, please "
+        [:a {:href "https://github.com/zk/inky/issues"} "open an issue"]
+        " or "
+        [:a {:href "https://github.com/zk/inky/pulls"} "send us a pull request"]
+        "."]]]}))
 
 (defn $intro [data]
   (common/$layout
@@ -192,24 +232,21 @@
       [:section.about
        [:h3 "About"]
        [:p
-        "Inky.cc is a place to compile and host short snippets of ClojureScript, &#224; la "
+        "Inky is a place to compile and host short snippets of ClojureScript, &#224; la "
         [:a {:href "http://bl.ocks.org"} "blocks"]
         ", "
         [:a {:href "http://jsfiddle.net/"} "jsfiddle"]
         ", and "
         [:a {:href "http://codepen.io/"} "codepen"]
         "."
-        " We'll bring the environment, you bring the code."]]
+        " We'll bring the environment, you bring the code."]
+       [:p "We believe that access to example code is an important part of a language's ecosystem, and inky aims to help with that, in some small way, for ClojureScript."]]
       [:section.instructions
        [:h3 "How-To: The Short Version"]
-       [:p
-        "Sketches are "
-        [:a {:href "https://gist.github.com"} "gist"]
-        "-backed."]
        [:div.instructions-list
         [:ol
          [:li
-          "Create a gist that contains a single "
+          "Create a " [:a {:href "https://gist.github.com"} "gist"] " that contains a single "
           [:code "cljs"]
           " file, then visit "
           [:code "inky.cc/:gh-login/:gist-id"]
@@ -217,7 +254,7 @@
          [:li "???"]
          [:li "Profit"]]]
        [:p
-        "There's also a slightly longer "
+        "Here's a slightly longer "
         [:a {:href "/getting-started"}
          "getting started tutorial"]
         "."]]
@@ -225,37 +262,6 @@
        [:h3 "Recent Sketches"]
        [:ul
         (map $sketch-preview config/previews)]]
-      [:section.local-dev
-       [:h3 "Sketching Locally"]
-       [:p
-        "Compiling a sketch takes a loooooong time, because CPU isn't cheap.
-         This works for posting your finished sketches, but is much
-         too long for development. We've got a lein plugin which will
-         allow you to work locally -- with much faster compile times,
-         source-maps, and all your Clojure tooling."]
-       [:ol
-        [:li
-         "Add "
-         [:code "[lein-inky " common/inky-version "]"]
-         " to the plugins section of your user profile in "
-         [:code "~/.lein/profiles.clj"]]
-        [:li
-         "Fork "
-         [:a {:href "https://gist.github.com/zk/8108564"} "this gist"]]
-        [:li
-         "Clone that gist locally: "
-         [:code "git clone git@gist.github.com/&lt;gist-id&gt;.git"]]
-        [:li [:code "cd &lt;gist-id&gt;"]]
-        [:li "Run " [:code "lein inky"]]]
-       [:p
-        "Visit "
-        [:a {:href "http://localhost:4659"}
-         "http://localhost:4659"]
-        " and start editing your sketch."]
-       [:p
-        "When you're done editing, commit, push to GitHub, and visit "
-        [:code "http://inky.cc/&lt;github-login&gt;/&lt;gist-id&gt;"]
-        " to make your sketch available on the tubes."]]
       [:section.libs
        [:h3 "Libs"]
        [:p
