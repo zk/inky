@@ -21,12 +21,12 @@
   [["c2" "0.2.3" "https://github.com/lynaghk/c2"]
    ["cljson" "1.0.6" "https://github.com/tailrecursion/cljson"]
    ["core.async" "0.1.267.0-0d7780-alpha" "https://github.com/clojure/core.async"]
-   ["core.logic" "0.8.5" "https://github.com/clojure/core.logic"]
+   ["core.logic" "0.8.7" "https://github.com/clojure/core.logic"]
    ["dommy" "0.1.2" "https://github.com/Prismatic/dommy"]
    ["double-check" "0.5.4-SNAPSHOT" "https://github.com/cemerick/double-check"]
-   ["javelin" "2.4.0" "https://github.com/tailrecursion/javelin"]
-   ["schema" "0.2.0" "https://github.com/Prismatic/schema"]
-   ["secretary" "0.4.0" "https://github.com/gf3/secretary"]])
+   ["javelin" "3.1.0" "https://github.com/tailrecursion/javelin"]
+   ["schema" "0.2.1" "https://github.com/Prismatic/schema"]
+   ["secretary" "1.0.0" "https://github.com/gf3/secretary"]])
 
 (def previews
   [["almost.haiku"
