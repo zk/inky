@@ -35,7 +35,9 @@
     (catch [:status 403] _
       ;; rate limit error
       (println "Rate limit hit fetching gist id:" gist-id)
-      {:success false :error-cause "Rate limit hit fetching gist."})))
+      {:success false :error-cause "Rate limit hit fetching gist." :status 403})
+    (catch [:status 404] _
+      {:success false :status 404})))
 
 (defn compile-cljs [hash filename]
   (try

@@ -304,6 +304,9 @@
    [:body
     [:h1 "404 | " [:a {:href "/"} "inky.cc"]]]])
 
+(defn gist-exists? [login gist-id]
+  (not= 404 (:status (comp/gist-data gist-id))))
+
 (defroutes _routes
   (GET "/" [] (fn [r]
                 ($intro {:jobs (mon/fetch :compile-jobs
@@ -320,21 +323,30 @@
             sketch-meta (try
                           (->> (slurp (str "http://f.inky.cc/" gist-id "/meta.edn"))
                                edn/read-string)
-                          (catch Exception e
-                            (println "Exception reading meta from s3 for gist id:" gist-id)
-                            (.printStackTrace e)
-                            nil))
+                          (catch java.io.FileNotFoundException e nil))
             recompile? (-> r :params :recompile)
             compile? (or (not sketch-meta)
                          (-> r :params :recompile))
             compiling? (in-progress? gist-id)]
-
         (cond
           compiling? (if recompile?
                        (redirect (str "/" login "/" gist-id))
                        (sketch/$compiling-page))
-          compile? (do (request-compile login gist-id)
-                       (redirect (str "/" login "/" gist-id)))
+          compile? (if (gist-exists? login gist-id)
+                     (do (request-compile login gist-id)
+                         (redirect (str "/" login "/" gist-id)))
+                     {:status 404
+                      :body (common/$layout
+                              {:content
+                               [:div
+                                [:h2 "No Such Gist "
+                                 [:code login "/" gist-id]]
+                                [:p
+                                 "Looks like we couldn't find the gist you were trying to compile. "
+                                 [:a
+                                  {:href (str "https://gists.github.com/" login "/" gist-id)}
+                                  "This link"]
+                                 " should point to the gist you were trying to compile. If it does not, then you've most likely got the wrong the github login and gist id in your browser's location bar."]]})})
           :else (html-response (sketch/$sketch-page sketch-meta))))))
 
   (GET "/:login/:gist-id/sketch" [login gist-id]
