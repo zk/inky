@@ -248,11 +248,12 @@
          [:li
           "Create a " [:a {:href "https://gist.github.com"} "gist"] " that contains a single "
           [:code "cljs"]
-          " file, then visit "
+          " file."]
+         [:li
+          "Visit "
           [:code "inky.cc/:gh-login/:gist-id"]
-          "."]
-         [:li "???"]
-         [:li "Profit"]]]
+          "."]]]
+       [:p "Inky will compile your sketch and drop you on the resulting page."]
        [:p
         "Here's a slightly longer "
         [:a {:href "/getting-started"}
