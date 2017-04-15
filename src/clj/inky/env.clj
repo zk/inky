@@ -21,7 +21,7 @@
   "Retrieve and parse int env var."
   [sym & [default]]
   (if-let [env-var (env sym)]
-    (Integer/parseInt env-var)
+    (clojure.core/int env-var)
     default))
 
 (defn str
